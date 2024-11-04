@@ -1,0 +1,187 @@
+﻿@attribute [Authorize(Roles = "Admin")]
+@inject IRepository Repository
+@inject SweetAlertService sweetAlertService
+@inject NavigationManager navigationManager
+@inject ILoginService loginService
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+@using Blazored.Modal
+@using Blazored.Modal.Services
+
+<div class="page">
+    <main>
+
+
+
+        <nav class="navbar">
+            <div class="logo-section">
+                <a href="/" class="d-flex align-items-center">
+                    <img src="images/logo.png" alt="Logo" class="logo-image" />
+                </a>
+                    <span class="logo ms-2">NEXUS PROJECT</span>
+               
+            </div>
+             <AuthorizeView>
+                        <NotAuthorized Context="NotAuthorizedContext">
+            <div class="buttonsr">
+                        <button class="nav-button" @onclick=@(() => ShowModal3())>Sign In</button>
+                        <button class="nav-button" @onclick=@(() => ShowModal2())>Register</button>
+            </div>
+                </NotAuthorized>
+            </AuthorizeView>
+
+            
+
+
+                    <AuthorizeView Roles="Admin">
+                        <Authorized>
+
+                            
+
+                    <a class="nav-link text-white" href="coins">&nbsp; Evaluation and Monitoring  </a>
+
+
+                    <a class="nav-link text-white" href="coins">&nbsp; Messages  </a>
+
+
+                    <a class="nav-link text-white" href="coins">&nbsp; Assign Activities  </a>
+                            
+        
+                             
+
+                </Authorized>
+                    </AuthorizeView>
+
+
+
+
+
+
+            <AuthorizeView Roles="Tutor">
+                <Authorized>
+
+                    <a class="nav-link text-white" href="coins">&nbsp; Evaluation and Monitoring  </a>
+
+
+                    <a class="nav-link text-white" href="coins">&nbsp; Messages  </a>
+
+
+                    <a class="nav-link text-white" href="coins">&nbsp; Assign Activities  </a>
+
+
+                </Authorized>
+            </AuthorizeView>
+
+
+            <AuthorizeView Roles="Young">
+                <Authorized>
+
+
+                    <a class="nav-link text-white" href="coins">&nbsp; Activities  </a>
+
+
+                    <a class="nav-link text-white" href="coins">&nbsp; Messages  </a>
+
+
+                    <a class="nav-link text-white" href="coins">&nbsp; Grades  </a>
+
+
+
+                </Authorized>
+            </AuthorizeView>
+
+
+
+            <AuthorizeView>
+                <Authorized>
+                    <div class="d-flex justify-content-end mx-4">
+
+                            <div class="btn-group dropstart">
+                                <button class="dropdown-toggle rounded-circle" data-bs-toggle="dropdown" aria-expanded="false" style=" border: 0px; background: transparent;">
+                                    <img src="Images/person.png" width="55" height="55" class="rounded-circle" />
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="">@context.User.Identity!.Name</a></li>
+                                    <li><button class="dropdown-item" @onclick=@(() => ShowModal()) type="button"><i class="bi bi-person-slash"></i>&nbsp; &nbsp; Edit User</button></li>
+                                    <li><button class="dropdown-item" @onclick="Logout" type="button"><i class="bi bi-box-arrow-left"></i>&nbsp; &nbsp; Logout</button></li>
+                                </ul>
+                            </div>                        
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </nav>
+
+
+
+
+                 
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+
+
+@code {
+
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+
+    private async Task ShowModal()
+    {
+        IModalReference modalReference;
+        modalReference = Modal.Show<Pages.Auth.EditUser>("Edit User");
+
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+
+        }
+    }
+
+
+    
+
+
+    private async Task Logout()
+    {
+        await loginService.LogoutAsync();
+        navigationManager.NavigateTo("/", true);
+    }
+
+
+    private void Edit()
+    {
+
+        navigationManager.NavigateTo("/edituser", true);
+    }
+
+
+
+    private async Task ShowModal2()
+    {
+        IModalReference modalReference;
+
+        modalReference = Modal.Show<Pages.Auth.Register>("Register");
+
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+
+        }
+    }
+
+    private async Task ShowModal3()
+    {
+        IModalReference modalReference;
+
+        modalReference = Modal.Show<Pages.Auth.Login>("Login");
+
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+
+        }
+    }
+}

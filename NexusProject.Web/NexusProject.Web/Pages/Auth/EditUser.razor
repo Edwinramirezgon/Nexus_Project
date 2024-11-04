@@ -1,0 +1,155 @@
+﻿@page "/EditUser"
+@attribute [Authorize(Roles = "Admin , User")]
+@inject IRepository repository
+@inject SweetAlertService sweetAlertService
+@inject NavigationManager navigationManager
+@inject ILoginService loginService
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+
+<PageTitle>Edit User</PageTitle>
+
+
+@if (user is null)
+
+{
+    <div class="spinner" />
+
+}
+else
+{
+
+    <EditForm Model="user" OnValidSubmit="SaveUserAsync">
+
+        <DataAnnotationsValidator />
+
+
+        <div class="card">
+            <div class="card-header">
+                <span>
+                    <i class="bi bi-person-slash" /> Edit User
+                    <button class="btn btn-sm btn-dark  mx-2  float-end" type="submit"><i class="bi bi-floppy2" /> Save Changes</button>
+                    <a class="btn btn-sm btn-outline-primary float-end" @onclick=@(() => ShowModal2())><i class="bi bi-key" /> Change Password</a>
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput3" placeholder="First Name " @bind-Value="@user.FirstName" />
+                            <label for="floatingInput3">First Name :</label>
+                            <ValidationMessage For="@(() => user.FirstName)" />
+                        </div>
+
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput4" placeholder="Last Name " @bind-Value="@user.LastName" />
+                            <label for="floatingInput4">Last Name :</label>
+                            <ValidationMessage For="@(() => user.LastName)" />
+                        </div>
+
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput5" placeholder="Document" @bind-Value="@user.Document" />
+                            <label for="floatingInput5">Document :</label>
+                            <ValidationMessage For="@(() => user.Document)" />
+                        </div>
+
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput6" placeholder="Phone" @bind-Value="@user.PhoneNumber" />
+                            <label for="floatingInput6">Phone :</label>
+                            <ValidationMessage For="@(() => user.PhoneNumber)" />
+                        </div>
+
+
+                      
+                    </div>
+
+
+                    <div class="col-6">
+
+                       
+
+
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        <span>
+        </span>
+    </EditForm>
+}
+
+@code {
+  
+
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+
+    private async Task ShowModal2()
+    {
+        IModalReference modalReference;
+        modalReference = Modal.Show<ChangePassword>("Change Password");
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+            await LoadUserAsyc();
+        }
+    }
+    private User user;
+    private string imageUrl;
+
+    protected override async Task OnInitializedAsync()
+        {
+
+        await LoadUserAsyc();
+
+      
+        }
+
+
+
+    private async Task LoadUserAsyc()
+    {     
+
+        var responseHTTP = await repository.GetAsync<User>($"/api/accounts");
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/");
+                return;
+            }
+
+            var messageError = await responseHTTP.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            return;
+        }
+        user = responseHTTP.Response;
+    }
+
+
+
+   
+
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+    private async Task SaveUserAsync()
+    {
+        var responseHttp = await repository.Put<User, TokenDTO>("/api/accounts", user!);
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+
+            return;
+        }
+        await loginService.LoginAsync(responseHttp.Response!.Token);
+        await BlazoredModal.CloseAsync(ModalResult.Ok());
+    }
+}
+

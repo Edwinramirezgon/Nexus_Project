@@ -1,0 +1,481 @@
+﻿@page "/Register"
+@inject SweetAlertService sweetAlertService
+@inject NavigationManager navigationManager
+@inject ILoginService loginService
+@inject IRepository Repository
+
+
+<PageTitle>Register</PageTitle>
+
+
+
+<EditForm Model="@userType" OnValidSubmit="CreateUserAsync">
+    <DataAnnotationsValidator />
+
+    <div class="card">
+
+        <div class="card-body">
+            <div class="form-floating mb-3">
+                <select class="form-select" id="floatinginput" @onchange="OnUserTypeChange">
+                    <option value="0">
+                        Select a User Type&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;
+                        &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;
+                        &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp
+                    </option>
+                    <option value="Tutor">Tutor</option>
+                    <option value="Young">Young</option>
+                    <option value="Admin">Admin</option>
+                </select>
+                <label for="floatinginput">User Type:</label>
+            </div>
+
+            <div class="row">
+                @if (userType == "Tutor")
+                {
+                    @RenderTutorForm()
+                }
+                else if (userType == "Young")
+                {
+                    @RenderYoungForm()
+                }
+                else if (userType == "Admin")
+                {
+                    @RenderAdminForm()
+                }
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+    [CascadingParameter]
+
+
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+
+    private string userType = "0";
+
+
+    private void OnUserTypeChange(ChangeEventArgs e)
+
+
+    {
+        userType = e.Value.ToString();
+
+
+    }
+
+
+
+    private User Users = new();
+
+
+    private UserDTO userDTO = new ();
+
+    private Tutor tutor = new();
+
+    private Young young = new();
+
+    private Admin admin = new();
+
+
+    [Parameter]
+
+
+    [SupplyParameterFromQuery]
+
+
+
+    public bool IsAdmin { get; set; }
+
+
+    private async Task CreateUserAsync()
+
+
+
+    {
+
+        if (userType == "Admin")
+
+        {
+
+
+            userDTO.UserName = userDTO.Email;
+
+            userDTO.UserType = UserType.Admin;
+
+
+            admin.UserDocument = userDTO.Document;
+
+
+            var responseHttp = await Repository.PostAsync<UserDTO>("/api/accounts/CreateUser", userDTO);
+
+            var responseHttp2 = await Repository.PostAsync("/api/accounts/CreateAdmin", admin);
+
+
+
+
+            if (responseHttp.Error)
+
+
+
+            {
+
+                var message = await responseHttp.GetErrorMessageAsync();
+
+
+
+                await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+
+
+
+                return;
+
+
+
+            }
+
+          
+
+
+
+        }
+
+
+        else if (userType == "Tutor")
+
+
+        {
+
+            userDTO.UserName = userDTO.Email;
+
+
+            userDTO.UserType = UserType.Tutor;
+
+            tutor.UserDocument = userDTO.Document;
+
+            var responseHttp = await Repository.PostAsync<UserDTO>("/api/accounts/CreateUser", userDTO);
+
+
+            var responseHttp2 = await Repository.PostAsync("/api/accounts/CreateTutor", tutor);
+
+
+
+
+
+            if (responseHttp.Error)
+
+            {
+
+                var message = await responseHttp.GetErrorMessageAsync();
+
+
+
+                await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+
+                return;
+
+            }
+        
+
+
+
+        }
+
+        else if (userType == "Young")
+
+        {
+
+            userDTO.UserName = userDTO.Email;
+
+
+            userDTO.UserType = UserType.Tutor;
+
+            young.UserDocument = userDTO.Document;
+
+
+
+            var responseHttp = await Repository.PostAsync<UserDTO>("/api/accounts/CreateUser", userDTO);
+
+            var responseHttp2 = await Repository.PostAsync("/api/accounts/CreateYoung", young);
+
+
+
+
+
+
+
+            if (responseHttp.Error)
+
+            {
+
+                var message = await responseHttp.GetErrorMessageAsync();
+
+
+
+                await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return;
+
+            }
+
+        }
+              
+
+
+       
+
+
+        await BlazoredModal.CloseAsync(ModalResult.Ok());
+
+
+        if (IsAdmin == true)
+
+
+        {
+
+            navigationManager.NavigateTo("/Users");
+
+        }
+
+        else
+
+
+
+        {
+
+
+
+            await sweetAlertService.FireAsync("confirm", "Your account has been successfully created. You must wait for an Admin to approve your account.", SweetAlertIcon.Info);
+
+
+
+
+
+            navigationManager.NavigateTo("/", true);
+
+
+
+        }
+
+
+    }
+
+
+
+    private RenderFragment RenderTutorForm() => __builder =>
+
+
+
+    {
+
+        <div class="card-header">
+            <span>
+                <i class="bi bi-person" /> Register New Tutor
+                <button class="btn btn-dark float-end" type="submit">Submit Register</button>
+            </span>
+        </div>
+        <div class="col-6">
+        <div class="form-floating mb-3">
+                <InputText class="form-control" id="floatingInput" placeholder="FirstName" @bind-Value="@userDTO.FirstName" />
+            <label for="floatingInput">First Name:</label>
+                <ValidationMessage For="@(() => userDTO.FirstName)" />
+        </div>
+
+        <div class="form-floating mb-3">
+                <InputText class="form-control" id="floatingInput2" placeholder="Last Name" @bind-Value="@userDTO.LastName" />
+            <label for="floatingInput2">Last Name:</label>
+                <ValidationMessage For="@(() => userDTO.LastName)" />
+        </div>
+
+        <div class="form-floating mb-3">
+                <InputText type="password" class="form-control" id="floatingInput7" placeholder="Password" @bind-Value="@userDTO.Password" />
+            <label for="floatingInput7">Password:</label>
+                <ValidationMessage For="@(() => userDTO.Password)" />
+        </div>
+        <div class="form-floating mb-3">
+            <InputText class="form-control custom-width" id="floatingInput5" placeholder="Speciality :" @bind-Value="@tutor.Speciality" style="height: 140px; padding: 10px;" />
+            <label for="floatingInput5">Speciality :</label>
+            <ValidationMessage For="@(() => tutor.Speciality)" />
+
+        </div>
+
+        </div>
+        <div class="col-6">
+
+            <div class="form-floating mb-3">
+                <InputText class="form-control" id="floatingInput3" placeholder="Identification Number" @bind-Value="@userDTO.Document" />
+                <label for="floatingInput3">Identification Number:</label>
+                <ValidationMessage For="@(() => userDTO.Document)" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText class="form-control custom-width" id="floatingInput4" placeholder="Profession :" @bind-Value="@tutor.Profession" />
+                <label for="floatingInput4">Profession :</label>
+                <ValidationMessage For="@(() => tutor.Profession)" />
+
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText type="password" class="form-control" id="floatingInput9" placeholder="Password Confirmation" @bind-Value="@userDTO.PasswordConfirm" />
+                <label for="floatingInput9">Password Confirmation:</label>
+                <ValidationMessage For="@(() => userDTO.PasswordConfirm)" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText class="form-control custom-width" id="floatingInput8" placeholder="Availability :" @bind-Value="@tutor.Availability" />
+                <label for="floatingInput8">Availability :</label>
+                <ValidationMessage For="@(() => tutor.Availability)" />
+
+
+            </div>
+
+    
+            <div class="form-floating mb-3">
+                <InputText type="email" class="form-control" id="floatingInput10" placeholder="Email" @bind-Value="@userDTO.Email" />
+                <label for="floatingInput10">Email:</label>
+                <ValidationMessage For="@(() => userDTO.Email)" />
+            </div>
+        </div>
+    };
+
+
+
+    private RenderFragment RenderYoungForm() => __builder =>
+
+    {
+
+        <div class="card-header">
+            <span>
+                <i class="bi bi-person" /> Register New Young
+                <button class="btn btn-dark float-end" type="submit">Submit Register</button>
+            </span>
+        </div>
+        <div class="col-6">
+        <div class="form-floating mb-3">
+                <InputText class="form-control" id="floatingInput" placeholder="FirstName" @bind-Value="@userDTO.FirstName" />
+            <label for="floatingInput">First Name:</label>
+                <ValidationMessage For="@(() => userDTO.FirstName)" />
+        </div>
+
+        <div class="form-floating mb-3">
+                <InputText class="form-control" id="floatingInput2" placeholder="Last Name" @bind-Value="@userDTO.LastName" />
+            <label for="floatingInput2">Last Name:</label>
+                <ValidationMessage For="@(() => userDTO.LastName)" />
+        </div>
+
+        <div class="form-floating mb-3">
+                <InputText type="password" class="form-control" id="floatingInput7" placeholder="Password" @bind-Value="@userDTO.Password" />
+            <label for="floatingInput7">Password:</label>
+                <ValidationMessage For="@(() => userDTO.Password)" />
+        </div>
+        <div class="form-floating mb-3">
+            <InputText class="form-control custom-width" id="floatingInput5" placeholder="Interests :" @bind-Value="@young.Interests" style="height: 140px; padding: 10px;" />
+            <label for="floatingInput5">Interests :</label>
+            <ValidationMessage For="@(() => young.Interests)" />
+
+        </div>
+
+        </div>
+        <div class="col-6">
+
+            <div class="form-floating mb-3">
+                <InputText class="form-control" id="floatingInput3" placeholder="Identification Number" @bind-Value="@userDTO.Document" />
+                <label for="floatingInput3">Identification Number:</label>
+                <ValidationMessage For="@(() => userDTO.Document)" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputDate class="form-control" id="floatingInput4" placeholder="Date Of Birth :" @bind-Value="@young.DateOfBirth" />
+                <label for="floatingInput4">Date Of Birth :</label>
+                <ValidationMessage For="@(() => young.DateOfBirth)" />
+
+            </div>
+
+
+
+            <div class="form-floating mb-3">
+                <InputText type="password" class="form-control" id="floatingInput9" placeholder="Password Confirmation" @bind-Value="@userDTO.PasswordConfirm" />
+                <label for="floatingInput9">Password Confirmation:</label>
+                <ValidationMessage For="@(() => userDTO.PasswordConfirm)" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="email" class="form-control" id="floatingInput10" placeholder="Email" @bind-Value="@userDTO.Email" />
+                <label for="floatingInput10">Email:</label>
+                <ValidationMessage For="@(() => userDTO.Email)" />
+            </div>
+        </div>
+    };
+
+
+
+    private RenderFragment RenderAdminForm() => __builder =>
+
+    {
+
+        <div class="card-header">
+            <span>
+                <i class="bi bi-person" /> Register New Admin
+                <button class="btn btn-dark float-end" type="submit">Submit Register</button>
+            </span>
+        </div>
+        <div class="col-6">
+        <div class="form-floating mb-3">
+                <InputText class="form-control" id="floatingInput" placeholder="FirstName" @bind-Value="@userDTO.FirstName" />
+            <label for="floatingInput">First Name:</label>
+                <ValidationMessage For="@(() => userDTO.FirstName)" />
+        </div>
+
+        <div class="form-floating mb-3">
+                <InputText class="form-control" id="floatingInput2" placeholder="Last Name" @bind-Value="@userDTO.LastName" />
+            <label for="floatingInput2">Last Name:</label>
+                <ValidationMessage For="@(() => userDTO.LastName)" />
+        </div>
+
+        <div class="form-floating mb-3">
+                <InputText type="password" class="form-control" id="floatingInput7" placeholder="Password" @bind-Value="@userDTO.Password" />
+            <label for="floatingInput7">Password:</label>
+                <ValidationMessage For="@(() => userDTO.Password)" />
+        </div>
+        <div class="form-floating mb-3">
+                <InputText class="form-control custom-width" id="floatingInput5" placeholder="Rol :" @bind-Value="@admin.Rol" />
+                <label for="floatingInput5">Rol :</label>
+            <ValidationMessage For="@(() => admin.Rol)" />
+
+        </div>
+        </div>
+
+        <div class="col-6">
+
+            <div class="form-floating mb-3">
+                <InputText class="form-control" id="floatingInput3" placeholder="Identification Number" @bind-Value="@userDTO.Document" />
+                <label for="floatingInput3">Identification Number:</label>
+                <ValidationMessage For="@(() => userDTO.Document)" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText class="form-control custom-width" id="floatingInput8" placeholder="Area :" @bind-Value="@admin.Area" />
+                <label for="floatingInput8">Area :</label>
+                <ValidationMessage For="@(() => admin.Area)" />
+
+            </div>
+
+
+
+            <div class="form-floating mb-3">
+                <InputText type="password" class="form-control" id="floatingInput9" placeholder="Password Confirmation" @bind-Value="@userDTO.PasswordConfirm" />
+                <label for="floatingInput9">Password Confirmation:</label>
+                <ValidationMessage For="@(() => userDTO.PasswordConfirm)" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="email" class="form-control" id="floatingInput10" placeholder="Email" @bind-Value="@userDTO.Email" />
+                <label for="floatingInput10">Email:</label>
+                <ValidationMessage For="@(() => userDTO.Email)" />
+            </div>
+        </div>
+    };
+}
+
+

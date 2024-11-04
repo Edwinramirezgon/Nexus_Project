@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>disable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="Properties\ServiceDependencies\**" />
+		<Content Remove="Properties\ServiceDependencies\**" />
+		<EmbeddedResource Remove="Properties\ServiceDependencies\**" />
+		<None Remove="Properties\ServiceDependencies\**" />
+		<_WebToolingArtifacts Remove="Properties\ServiceDependencies\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Remove="Pages\Auth\ConfirmEmail.razor" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Azure.Storage.Blobs" Version="12.22.2" />
+		<PackageReference Include="Blazored.Modal" Version="7.3.1" />
+		<PackageReference Include="CurrieTechnologies.Razor.SweetAlert2" Version="5.6.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="8.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.10" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.10">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.0" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<Folder Include="wwwroot\Images\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="wwwroot\Images\loader.gif" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\NexusProject.Shared\NexusProject.Shared.csproj" />
+	</ItemGroup>
+
+</Project>
