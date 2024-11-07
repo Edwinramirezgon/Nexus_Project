@@ -95,7 +95,22 @@
             <AuthorizeView>
                 <Authorized>
                     <div class="d-flex justify-content-end mx-4">
+                        @if (!string.IsNullOrEmpty(photoUser))
+                                {
+                                    <div class="btn-group dropstart">
+                                        <button class="dropdown-toggle rounded-circle" data-bs-toggle="dropdown" aria-expanded="false" style=" border: 0px; background: transparent;">
+                                            <img src="@photoUser" width="55" height="55" class="rounded-circle" />
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="">@context.User.Identity!.Name</a></li>
+                                            <li><button class="dropdown-item" @onclick=@(() => ShowModal()) type="button"><i class="bi bi-person-slash"></i>&nbsp; &nbsp; Edit User</button></li>
+                                            <li><button class="dropdown-item" @onclick="Logout" type="button"><i class="bi bi-box-arrow-left"></i>&nbsp; &nbsp; Logout</button></li>
+                                        </ul>
+                                    </div>
+                                }
 
+                                @if (string.IsNullOrEmpty(photoUser))
+                                {
                             <div class="btn-group dropstart">
                                 <button class="dropdown-toggle rounded-circle" data-bs-toggle="dropdown" aria-expanded="false" style=" border: 0px; background: transparent;">
                                     <img src="Images/person.png" width="55" height="55" class="rounded-circle" />
@@ -105,7 +120,8 @@
                                     <li><button class="dropdown-item" @onclick=@(() => ShowModal()) type="button"><i class="bi bi-person-slash"></i>&nbsp; &nbsp; Edit User</button></li>
                                     <li><button class="dropdown-item" @onclick="Logout" type="button"><i class="bi bi-box-arrow-left"></i>&nbsp; &nbsp; Logout</button></li>
                                 </ul>
-                            </div>                        
+                            </div>
+                        }
                     </div>
                 </Authorized>
             </AuthorizeView>
@@ -141,7 +157,25 @@
     }
 
 
-    
+     private string photoUser;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
+    protected async override Task OnParametersSetAsync()
+
+    {
+        var authenticationState = await authenticationStateTask;
+
+        var photoClaim = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Photo"); ;
+
+        if (photoClaim is not null)
+
+        {
+            photoUser = photoClaim.Value;
+
+        }
+
+    }
 
 
     private async Task Logout()

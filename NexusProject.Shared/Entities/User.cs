@@ -29,7 +29,10 @@ namespace NexusProject.Shared.Entities
         [MaxLength(50, ErrorMessage = "More than 50 charachters are not allowed")]
         [Required(ErrorMessage = "The field {0} is mandatory")]
         public string LastName { get; set; }
-     
+
+        [Display(Name = "Foto")]
+        public string Photo { get; set; }
+
 
         public UserType UserType { get; set; }
 

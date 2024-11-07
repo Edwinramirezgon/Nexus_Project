@@ -56,6 +56,38 @@
     BlazoredModalInstance BlazoredModal { get; set; } = default!;
 
 
+
+    protected override async Task OnInitializedAsync()
+
+    {
+
+       
+
+        if (!string.IsNullOrEmpty(userDTO.Photo))
+
+        {
+
+            imageUrl = userDTO.Photo;
+
+            userDTO.Photo = null;
+
+        }
+
+    }
+    private string imageUrl;
+
+
+    private void ImageSelected(string imagenBase64)
+
+    {
+
+        userDTO.Photo = imagenBase64;
+
+        imageUrl = null;
+
+    }
+
+
     private string userType = "0";
 
 
@@ -338,6 +370,9 @@
                 <label for="floatingInput10">Email:</label>
                 <ValidationMessage For="@(() => userDTO.Email)" />
             </div>
+            <div class="mb-3">
+                <InputImg Label="Photo" ImageSelected="ImageSelected" ImageURL="@imageUrl" />
+            </div>
         </div>
     };
 
@@ -406,6 +441,9 @@
                 <label for="floatingInput10">Email:</label>
                 <ValidationMessage For="@(() => userDTO.Email)" />
             </div>
+            <div class="mb-3">
+                <InputImg Label="Photo" ImageSelected="ImageSelected" ImageURL="@imageUrl" />
+            </div>
         </div>
     };
 
@@ -473,6 +511,9 @@
                 <InputText type="email" class="form-control" id="floatingInput10" placeholder="Email" @bind-Value="@userDTO.Email" />
                 <label for="floatingInput10">Email:</label>
                 <ValidationMessage For="@(() => userDTO.Email)" />
+            </div>
+            <div class="mb-3">
+                <InputImg Label="Photo" ImageSelected="ImageSelected" ImageURL="@imageUrl" />
             </div>
         </div>
     };

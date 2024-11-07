@@ -64,6 +64,10 @@ else
                             <ValidationMessage For="@(() => user.PhoneNumber)" />
                         </div>
 
+                        <div class="mb-3">
+                            <InputImg Label="Photo" ImageSelected="ImageSelected" ImageURL="@imageUrl" />
+                        </div>
+
 
                       
                     </div>
@@ -103,13 +107,42 @@ else
     private User user;
     private string imageUrl;
 
+
+
+    private void ImageSelected(string imagenBase64)
+
+    {
+
+        user!.Photo = imagenBase64;
+
+        imageUrl = null;
+
+    }
+
+
+
     protected override async Task OnInitializedAsync()
         {
 
         await LoadUserAsyc();
 
-      
+
+
+
+        if (!string.IsNullOrEmpty(user!.Photo))
+
+        {
+
+            imageUrl = user.Photo;
+
+            user.Photo = null;
+
         }
+    }
+
+
+
+
 
 
 
