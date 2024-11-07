@@ -98,13 +98,19 @@ namespace NexusProject.API.Controllers
                 return NoContent();
             }
 
+
+
             [HttpPut]
             [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
             public async Task<ActionResult> Put(User user)
             {
                 try
                 {
-
+                    if (!string.IsNullOrEmpty(user.Photo))
+                    {
+                        var photoUser = Convert.FromBase64String(user.Photo);
+                        user.Photo = await _fileStorage.SaveFileAsync(photoUser, ".jpg", _container);
+                    }
 
                     var currentUser = await _userHelper.GetUserAsync(user.Email!);
                     if (currentUser == null)
@@ -114,9 +120,9 @@ namespace NexusProject.API.Controllers
 
                     currentUser.Document = user.Document;
                     currentUser.FirstName = user.FirstName;
-                    currentUser.LastName = user.LastName;
-                    currentUser.PhoneNumber = user.PhoneNumber;
-
+                    currentUser.LastName = user.LastName;               
+                    currentUser.Photo = !string.IsNullOrEmpty(user.Photo) && user.Photo != currentUser.Photo ? user.Photo : currentUser.Photo;
+               
 
 
 
@@ -134,12 +140,21 @@ namespace NexusProject.API.Controllers
                 }
             }
 
+
+
+
+
             [HttpPut("User")]
             [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
             public async Task<ActionResult> Putadmin(User user)
             {
                 try
                 {
+                    if (!string.IsNullOrEmpty(user.Photo))
+                    {
+                        var photoUser = Convert.FromBase64String(user.Photo);
+                        user.Photo = await _fileStorage.SaveFileAsync(photoUser, ".jpg", _container);
+                    }
 
                     var currentUser = await _userHelper.GetUserAsync(user.Email!);
                     if (currentUser == null)
@@ -149,10 +164,11 @@ namespace NexusProject.API.Controllers
 
                     currentUser.Document = user.Document;
                     currentUser.FirstName = user.FirstName;
-                    currentUser.LastName = user.LastName;
+                    currentUser.LastName = user.LastName;                 
                     currentUser.PhoneNumber = user.PhoneNumber;
+                    currentUser.Photo = !string.IsNullOrEmpty(user.Photo) && user.Photo != currentUser.Photo ? user.Photo : currentUser.Photo;
                     currentUser.UserType = user.UserType;
-
+                   
 
 
 
@@ -188,6 +204,11 @@ namespace NexusProject.API.Controllers
                 if (user.UserType != 0)
                 {
 
+                    if (!string.IsNullOrEmpty(model.Photo))
+                    {
+                        var photoUser = Convert.FromBase64String(model.Photo);
+                        model.Photo = await _fileStorage.SaveFileAsync(photoUser, ".jpg", _container);
+                    }
 
                     var result = await _userHelper.AddUserAsync(user, model.Password);
                     try
@@ -374,7 +395,7 @@ namespace NexusProject.API.Controllers
                 new Claim("Document", user.Document),
                 new Claim("FirstName", user.FirstName),
                 new Claim("LastName", user.LastName),
-
+                new Claim("Photo", user.Photo ?? string.Empty)
 
             };
 

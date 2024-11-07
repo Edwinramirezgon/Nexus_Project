@@ -23,8 +23,8 @@ namespace NexusProject.API.Data
 
             await _context.Database.EnsureCreatedAsync();
             await CheckRoleAsync();
-            await CheckUserAsync("98764597", "Edwin", "Ramirez", "EDWINRAMIREZGON@GMAIL.COM", UserType.Admin, "https://nexusprojectitm.s3.us-east-2.amazonaws.com/edwin.png");
-            await CheckUserAsync("101715698", "Juan David", "Velasquez", "JUANDAV12@GMAIL.COM", UserType.Admin, "https://nexusprojectitm.s3.us-east-2.amazonaws.com/juan.png");
+            await CheckUserAsync("98764597", "Edwin", "Ramirez", "EDWINRAMIREZGON@GMAIL.COM", UserType.Admin, "https://nexusprojectitm.s3.us-east-2.amazonaws.com/08956e0c-da87-404d-9877-2144615a3ffc.jpg");
+            await CheckUserAsync("101715698", "Juan David", "Velasquez", "JUANDAV12@GMAIL.COM", UserType.Admin, "https://nexusprojectitm.s3.us-east-2.amazonaws.com/2d467b7f-b4e3-42c5-b035-8524a1b7841f.jpg");
             await CheckUserAsync("123456", "Tutor", "Number1", "Tutor1@Nexus.com", UserType.Tutor,"");
             await CheckUserAsync("78910", "Young", "Number1", "Young1@Nexus.com", UserType.Young,"");
             await CheckYoungAsync();

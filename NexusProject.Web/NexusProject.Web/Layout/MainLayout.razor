@@ -125,6 +125,10 @@
                     </div>
                 </Authorized>
             </AuthorizeView>
+
+
+
+          
         </nav>
 
 
@@ -141,81 +145,321 @@
 
 @code {
 
+   /* [CascadingParameter]
+
+     IModalService Modal { get; set; } = default!;
+
+
+
+
+
+
+
+
+
+     private async Task ShowModal()
+
+     {
+
+         IModalReference modalReference;
+
+         modalReference = Modal.Show<Pages.Auth.EditUser>("Edit User");
+
+
+
+         var result = await modalReference.Result;
+
+         if (result.Confirmed)
+
+         {
+
+
+
+         }
+
+     }
+
+
+
+
+
+      private string photoUser;
+
+
+
+     [CascadingParameter]
+
+     private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
+
+     protected async override Task OnParametersSetAsync()
+
+
+
+     {
+
+         var authenticationState = await authenticationStateTask;
+
+
+
+         var photoClaim = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Photo"); ;
+
+
+
+         if (photoClaim is not null)
+
+
+
+         {
+
+             photoUser = photoClaim.Value;
+
+
+
+         }
+
+
+
+     }
+
+
+
+
+
+     private async Task Logout()
+
+     {
+
+         await loginService.LogoutAsync();
+
+         navigationManager.NavigateTo("/", true);
+
+     }
+
+
+
+
+
+     private void Edit()
+
+     {
+
+
+
+         navigationManager.NavigateTo("/edituser", true);
+
+     }
+
+
+
+
+
+
+
+     private async Task ShowModal2()
+
+     {
+
+         IModalReference modalReference;
+
+
+
+         modalReference = Modal.Show<Pages.Auth.Register>("Register");
+
+
+
+         var result = await modalReference.Result;
+
+         if (result.Confirmed)
+
+         {
+
+
+
+         }
+
+     }
+
+
+
+     private async Task ShowModal3()
+
+     {
+
+         IModalReference modalReference;
+
+
+
+         modalReference = Modal.Show<Pages.Auth.Login>("Login");
+
+
+
+         var result = await modalReference.Result;
+
+         if (result.Confirmed)
+
+         {
+
+
+
+         }
+
+     }
+
+     }*/
+
+
+
     [CascadingParameter]
+
     IModalService Modal { get; set; } = default!;
 
+
+
     private async Task ShowModal()
+
     {
+
         IModalReference modalReference;
+
         modalReference = Modal.Show<Pages.Auth.EditUser>("Edit User");
 
+
+
         var result = await modalReference.Result;
+
         if (result.Confirmed)
+
         {
 
+
+
         }
+
     }
 
 
-     private string photoUser;
+
+
+
+    private string photoUser;
+
+
 
     [CascadingParameter]
+
     private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
+
     protected async override Task OnParametersSetAsync()
 
+
+
     {
+
         var authenticationState = await authenticationStateTask;
+
+
 
         var photoClaim = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Photo"); ;
 
+
+
         if (photoClaim is not null)
 
+
+
         {
+
             photoUser = photoClaim.Value;
+
+
 
         }
 
+
+
     }
+
+
+
 
 
     private async Task Logout()
+
     {
+
         await loginService.LogoutAsync();
+
         navigationManager.NavigateTo("/", true);
+
     }
+
+
+
 
 
     private void Edit()
+
     {
 
+
+
         navigationManager.NavigateTo("/edituser", true);
+
     }
+
+
+
+
 
 
 
     private async Task ShowModal2()
+
     {
+
         IModalReference modalReference;
+
+
 
         modalReference = Modal.Show<Pages.Auth.Register>("Register");
 
+
+
         var result = await modalReference.Result;
+
         if (result.Confirmed)
+
         {
 
+
+
         }
+
     }
 
+
+
     private async Task ShowModal3()
+
     {
+
         IModalReference modalReference;
+
+
 
         modalReference = Modal.Show<Pages.Auth.Login>("Login");
 
+
+
         var result = await modalReference.Result;
+
         if (result.Confirmed)
+
         {
 
+
+
         }
+
     }
 }
