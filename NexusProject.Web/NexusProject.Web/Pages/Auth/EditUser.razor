@@ -24,72 +24,26 @@ else
         <DataAnnotationsValidator />
 
 
-        <div class="card">
-            <div class="card-header">
-                <span>
-                    <i class="bi bi-person-slash" /> Edit User
-                    <button class="btn btn-sm btn-dark  mx-2  float-end" type="submit"><i class="bi bi-floppy2" /> Save Changes</button>
-                    <a class="btn btn-sm btn-outline-primary float-end" @onclick=@(() => ShowModal2())><i class="bi bi-key" /> Change Password</a>
-                </span>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-6">
+        @if (userType == "Tutor")
+        {
+            @RenderTutorForm()
+        }
+        else if (userType == "Young")
+        {
+            @RenderYoungForm()
 
+        }
+        else if (userType == "Admin")
+        {
+            @RenderAdminForm()
 
-                        <div class="form-floating mb-3">
-                            <InputText class="form-control" id="floatingInput3" placeholder="First Name " @bind-Value="@user.FirstName" />
-                            <label for="floatingInput3">First Name :</label>
-                            <ValidationMessage For="@(() => user.FirstName)" />
-                        </div>
-
-
-                        <div class="form-floating mb-3">
-                            <InputText class="form-control" id="floatingInput4" placeholder="Last Name " @bind-Value="@user.LastName" />
-                            <label for="floatingInput4">Last Name :</label>
-                            <ValidationMessage For="@(() => user.LastName)" />
-                        </div>
-
-
-                        <div class="form-floating mb-3">
-                            <InputText class="form-control" id="floatingInput5" placeholder="Document" @bind-Value="@user.Document" />
-                            <label for="floatingInput5">Document :</label>
-                            <ValidationMessage For="@(() => user.Document)" />
-                        </div>
-
-
-                        <div class="form-floating mb-3">
-                            <InputText class="form-control" id="floatingInput6" placeholder="Phone" @bind-Value="@user.PhoneNumber" />
-                            <label for="floatingInput6">Phone :</label>
-                            <ValidationMessage For="@(() => user.PhoneNumber)" />
-                        </div>
-
-                        <div class="mb-3">
-                            <InputImg Label="Photo" ImageSelected="ImageSelected" ImageURL="@imageUrl" />
-                        </div>
-
-
-                      
-                    </div>
-
-
-                    <div class="col-6">
-
-                       
-
-
-                        
-                    </div>
-                </div>
-            </div>
-        </div>
-        <span>
-        </span>
+        }
+  
     </EditForm>
 }
 
 @code {
-  
+
 
     [CascadingParameter]
     IModalService Modal { get; set; } = default!;
@@ -104,9 +58,15 @@ else
             await LoadUserAsyc();
         }
     }
-    private User user;
-    private string imageUrl;
 
+    private string userType;
+    private User user;
+    private Tutor tutor;
+    private Admin admin;
+    private Young young;
+
+    private string imageUrl;
+    private string id;
 
 
     private void ImageSelected(string imagenBase64)
@@ -122,7 +82,7 @@ else
 
 
     protected override async Task OnInitializedAsync()
-        {
+    {
 
         await LoadUserAsyc();
 
@@ -163,17 +123,81 @@ else
             return;
         }
         user = responseHTTP.Response;
+        userType = user.UserType.ToString();
+        id = user.Document;
+        if (userType == "Tutor")
+        {
+
+            await LoadTutorAsync(); 
+        }
+        else if (userType == "Young")
+        {
+            await LoadYoungAsync();
+
+
+        }
+        else if (userType == "Admin")
+        {
+            await LoadAdminAsync();
+
+
+        }
+
+    }
+
+    private async Task LoadTutorAsync()
+    {
+
+        var responseHTTP = await repository.GetAsync<Tutor>($"api/Tutors/{id}");
+        tutor = responseHTTP.Response;
+
+    }
+
+
+    private async Task LoadYoungAsync()
+    {
+        var responseHTTP = await repository.GetAsync<Young>($"api/Youngs/{id}");
+
+        young = responseHTTP.Response;
+
+    }
+
+
+    private async Task LoadAdminAsync()
+    {
+        var responseHTTP = await repository.GetAsync<Admin>($"api/Admins/{id}");
+        admin = responseHTTP.Response;
+
     }
 
 
 
-   
+
 
     [CascadingParameter]
     BlazoredModalInstance BlazoredModal { get; set; } = default!;
     private async Task SaveUserAsync()
     {
         var responseHttp = await repository.Put<User, TokenDTO>("/api/accounts", user!);
+
+        if (userType == "Tutor")
+        {
+
+            await SaveTutorAsync();
+        }
+        else if (userType == "Young")
+        {
+            await SaveYoungAsync();
+
+
+        }
+        else if (userType == "Admin")
+        {
+            await SaveAdminAsync();
+
+
+        }
+
         if (responseHttp.Error)
         {
             var message = await responseHttp.GetErrorMessageAsync();
@@ -184,5 +208,242 @@ else
         await loginService.LoginAsync(responseHttp.Response!.Token);
         await BlazoredModal.CloseAsync(ModalResult.Ok());
     }
+
+
+    private async Task SaveTutorAsync()
+    {
+        tutor.UserDocument = user.Document;
+        var responseHTTP = await repository.PutAsync<Tutor>($"api/Tutors", tutor);
+       
+
+    }
+
+
+    private async Task SaveYoungAsync()
+    {
+        young.UserDocument = user.Document;
+
+        var responseHTTP = await repository.PutAsync<Young>($"api/Youngs", young);
+
+
+    }
+
+
+    private async Task SaveAdminAsync()
+    {
+
+        admin.UserDocument = user.Document;
+
+        var responseHTTP = await repository.PutAsync<Admin>($"api/Admins", admin);
+
+
+    }
+
+
+
+
+
+    private RenderFragment RenderTutorForm() => __builder =>
+
+
+
+       {
+
+           <div class="card">
+               <div class="card-header">
+                   <span>
+                       <i class="bi bi-person-slash" /> Edit Tutor
+                       <button class="btn btn-sm btn-dark  mx-2  float-end" type="submit"><i class="bi bi-floppy2" /> Save Changes</button>
+                       <a class="btn btn-sm btn-outline-primary float-end" @onclick=@(() => ShowModal2())><i class="bi bi-key" /> Change Password</a>
+                   </span>
+               </div>
+               <div class="card-body">
+                   <div class="row">
+                       <div class="col-6">
+
+
+                           <div class="form-floating mb-3">
+                               <InputText class="form-control" id="floatingInput" placeholder="FirstName" @bind-Value="@user.FirstName" />
+                               <label for="floatingInput">First Name:</label>
+                               <ValidationMessage For="@(() => user.FirstName)" />
+                           </div>
+
+                           <div class="form-floating mb-3">
+                               <InputText class="form-control" id="floatingInput2" placeholder="Last Name" @bind-Value="@user.LastName" />
+                               <label for="floatingInput2">Last Name:</label>
+                               <ValidationMessage For="@(() => user.LastName)" />
+                           </div>
+
+                           
+                          <div class="form-floating mb-3">
+                               <InputText class="form-control custom-width" id="floatingInput5" placeholder="Speciality :" @bind-Value="@tutor.Speciality" style="height: 140px; padding: 10px;" />
+                               <label for="floatingInput5">Speciality :</label>
+                               <ValidationMessage For="@(() => tutor.Speciality)" />
+
+                           </div>
+
+                       </div>
+
+
+                       <div class="col-6">
+                          
+
+                          <div class="form-floating mb-3">
+                               <InputText class="form-control custom-width" id="floatingInput4" placeholder="Profession :" @bind-Value="@tutor.Profession" />
+                               <label for="floatingInput4">Profession :</label>
+                               <ValidationMessage For="@(() => tutor.Profession)" />
+
+                           </div>
+
+                       
+
+                           <div class="form-floating mb-3">
+                               <InputText class="form-control custom-width" id="floatingInput8" placeholder="Availability :" @bind-Value="@tutor.Availability" />
+                               <label for="floatingInput8">Availability :</label>
+                               <ValidationMessage For="@(() => tutor.Availability)" />
+
+
+                           </div>
+
+
+                           <div class="mb-3">
+                               <InputImg Label="Photo" ImageSelected="ImageSelected" ImageURL="@imageUrl" />
+                           </div>
+                       </div>
+                   </div>
+               </div>
+           </div>
+
+     
+    };
+
+
+
+    private RenderFragment RenderYoungForm() => __builder =>
+
+    {
+        <div class="card">
+            <div class="card-header">
+                <span>
+                    <i class="bi bi-person-slash" /> Edit Young
+                    <button class="btn btn-sm btn-dark  mx-2  float-end" type="submit"><i class="bi bi-floppy2" /> Save Changes</button>
+                    <a class="btn btn-sm btn-outline-primary float-end" @onclick=@(() => ShowModal2())><i class="bi bi-key" /> Change Password</a>
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput" placeholder="FirstName" @bind-Value="@user.FirstName" />
+                            <label for="floatingInput">First Name:</label>
+                            <ValidationMessage For="@(() => user.FirstName)" />
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput2" placeholder="Last Name" @bind-Value="@user.LastName" />
+                            <label for="floatingInput2">Last Name:</label>
+                            <ValidationMessage For="@(() => user.LastName)" />
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control custom-width" id="floatingInput5" placeholder="Interests :" @bind-Value="@young.Interests" style="height: 140px; padding: 10px;" />
+                            <label for="floatingInput5">Interests :</label>
+                            <ValidationMessage For="@(() => young.Interests)" />
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-6">
+
+                      
+
+                        <div class="form-floating mb-3">
+                            <InputDate class="form-control" id="floatingInput4" placeholder="Date Of Birth :" @bind-Value="@young.DateOfBirth" />
+                            <label for="floatingInput4">Date Of Birth :</label>
+                            <ValidationMessage For="@(() => young.DateOfBirth)" />
+
+                        </div>
+
+
+                        <div class="mb-3">
+                            <InputImg Label="Photo" ImageSelected="ImageSelected" ImageURL="@imageUrl" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+     
+    };
+
+
+
+    private RenderFragment RenderAdminForm() => __builder =>
+
+    {
+
+        <div class="card">
+            <div class="card-header">
+                <span>
+                    <i class="bi bi-person-slash" /> Edit Admin
+                    <button class="btn btn-sm btn-dark  mx-2  float-end" type="submit"><i class="bi bi-floppy2" /> Save Changes</button>
+                    <a class="btn btn-sm btn-outline-primary float-end" @onclick=@(() => ShowModal2())><i class="bi bi-key" /> Change Password</a>
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput" placeholder="FirstName" @bind-Value="@user.FirstName" />
+                            <label for="floatingInput">First Name:</label>
+                            <ValidationMessage For="@(() => user.FirstName)" />
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput2" placeholder="Last Name" @bind-Value="@user.LastName" />
+                            <label for="floatingInput2">Last Name:</label>
+                            <ValidationMessage For="@(() => user.LastName)" />
+                        </div>
+
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control custom-width" id="floatingInput5" placeholder="Rol :" @bind-Value="@admin.Rol" />
+                            <label for="floatingInput5">Rol :</label>
+                            <ValidationMessage For="@(() => admin.Rol)" />
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-6">
+                        
+
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control custom-width" id="floatingInput8" placeholder="Area :" @bind-Value="@admin.Area" />
+                            <label for="floatingInput8">Area :</label>
+                            <ValidationMessage For="@(() => admin.Area)" />
+
+                        </div>
+
+
+                        <div class="mb-3">
+                            <InputImg Label="Photo" ImageSelected="ImageSelected" ImageURL="@imageUrl" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+      
+    };
 }
 
