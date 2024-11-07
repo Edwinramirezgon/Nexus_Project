@@ -50,12 +50,9 @@ else
                     <tr>
                         <th>Photo</th>
                         <th>User</th>
-                        <th>Document</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Adress</th>
-                        <th>Confirm</th>
-                        <th>Trader Type</th>
+                        <th>Document</th>                     
+                        <th>Email</th>                        
+                        <th>Confirm</th>                       
                         <th>User Type</th>
                         <th>Actions</th>
                     </tr>
@@ -67,11 +64,9 @@ else
                         <tr>
                             
                             <td>@user.FullName</td>
-                            <td>@user.Document</td>
-                            <td>@user.PhoneNumber</td>
+                            <td>@user.Document</td>                           
                             <td>@user.Email</td>                           
                             <td>@user.EmailConfirmed</td>
-                            <td>@tradertype</td>
                             <td>@user.UserType</td>
 
                             <td>
@@ -143,9 +138,6 @@ else
             await LoadAsync();
         }
     }
-
-
-    public string tradertype { get; set; }
 
 
 
