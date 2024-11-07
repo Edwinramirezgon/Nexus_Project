@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusProject.Shared", "NexusProject.Shared\NexusProject.Shared.csproj", "{866651E0-E0A7-4B4F-B60C-C8804F5AD7E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusProject.Shared", "NexusProject.Shared\NexusProject.Shared.csproj", "{866651E0-E0A7-4B4F-B60C-C8804F5AD7E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusProject.API", "NexusProject.API\NexusProject.API.csproj", "{F62C547A-51EE-47D8-9394-AF24ECEE0012}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusProject.API", "NexusProject.API\NexusProject.API.csproj", "{F62C547A-51EE-47D8-9394-AF24ECEE0012}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusProject.Web", "NexusProject.Web\NexusProject.Web\NexusProject.Web.csproj", "{3836952D-3628-4B96-B86D-BD1208F1DE1E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusProject.Web", "NexusProject.Web\NexusProject.Web\NexusProject.Web.csproj", "{3836952D-3628-4B96-B86D-BD1208F1DE1E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
