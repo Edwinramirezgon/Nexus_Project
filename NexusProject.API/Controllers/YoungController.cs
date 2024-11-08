@@ -66,12 +66,26 @@ namespace NexusProject.API.Controllers
 
         }
 
-        //Method Get by ID (Read)
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult> GetAsync(int id)
+
+        [HttpGet("id/{id:int}")]
+        public async Task<ActionResult> GetAsyncid(int id)
         {
             var young = await _context.Youngs.FirstOrDefaultAsync
                 (x => x.Id == id);
+
+            if (young == null)
+            {
+                return NotFound();
+            }
+            return Ok(young);
+        }
+
+        //Method Get by ID (Read)
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult> GetAsync(string id)
+        {
+            var young = await _context.Youngs.FirstOrDefaultAsync
+                (x => x.UserDocument == id);
 
             if (young == null)
             {

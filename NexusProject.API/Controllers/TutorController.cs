@@ -68,6 +68,19 @@ namespace NexusProject.API.Controllers
             
         }
 
+        [HttpGet("id/{id:int}")]
+        public async Task<ActionResult> GetAsync(int id)
+        {
+            var tutor = await _context.Tutors.FirstOrDefaultAsync
+                (x => x.Id == id);
+
+            if (tutor == null)
+            {
+                return NotFound();
+            }
+            return Ok(tutor);
+        }
+
         //Method Get by ID (Read)
         [HttpGet("{id:int}")]
         public async Task<ActionResult> GetAsync(string id)
@@ -95,10 +108,10 @@ namespace NexusProject.API.Controllers
 
         //Metod Delete
         [HttpDelete("{id:int}")]
-        public async Task<ActionResult> DeleteAsync(int id)
+        public async Task<ActionResult> DeleteAsync(string id)
         {
             var tutor = await _context.Tutors.FirstOrDefaultAsync
-                  (x => x.Id == id);
+                  (x => x.UserDocument == id);
 
             if (tutor == null)
             {

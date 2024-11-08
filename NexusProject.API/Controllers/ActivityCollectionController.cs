@@ -27,29 +27,35 @@ namespace NexusProject.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAsync([FromQuery] PaginationDTO pagination)
+        public async Task<IActionResult> GetAsync([FromQuery] PaginationDTO pagination, [FromQuery] int tutorId)
         {
             var queryable = _context.ActivityColections
-             .AsQueryable();
+                .Where(ac => ac.TutorsId == tutorId)  
+                .AsQueryable();
+
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
                 queryable = queryable.Where(x => x.Id.ToString().ToLower().Contains(pagination.Filter.ToLower()));
             }
+
             return Ok(await queryable
-            .OrderBy(x => x.Id)
-            .Paginate(pagination)
-            .ToListAsync());
+                .OrderBy(x => x.Id)
+                .Paginate(pagination)
+                .ToListAsync());
         }
 
         [HttpGet("totalPages")]
-        public async Task<ActionResult> GetPages([FromQuery] PaginationDTO pagination)
-
+        public async Task<ActionResult> GetPages([FromQuery] PaginationDTO pagination, [FromQuery] int tutorId)
         {
-            var queryable = _context.ActivityColections.AsQueryable();
+            var queryable = _context.ActivityColections
+                .Where(ac => ac.TutorsId == tutorId)  
+                .AsQueryable();
+
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
                 queryable = queryable.Where(x => x.Id.ToString().ToLower().Contains(pagination.Filter.ToLower()));
             }
+
             double count = await queryable.CountAsync();
             double totalPages = Math.Ceiling(count / pagination.RecordsNumber);
             return Ok(totalPages);

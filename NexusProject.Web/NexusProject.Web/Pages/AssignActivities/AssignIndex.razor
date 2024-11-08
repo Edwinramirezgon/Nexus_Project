@@ -2,13 +2,14 @@
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
+@inject AuthenticationStateProvider authenticationStateProvider
 @attribute [Authorize(Roles = "Admin, Tutor")]
 <PageTitle>Assign Activities</PageTitle>
 
 <h4>ASSIGN ACTIVITIES</h4>
 
 <div class="container">
-    <div class="form-section">       
+    <div class="form-section">
         <select @bind="@selectedStudentId">
             <option value="">Select a Student</option>
             @foreach (var user in YoungUsers)
@@ -24,16 +25,16 @@
     </div>
 
     <GenericList MyList="ActivitiesCollection">
-      <Body>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>STUDENT DOCUMENT</th>
-                <th>STUDENT NAME</th>
-                <th>ACTIVITY NAME</th>
-                <th>PERCENTAGE</th>
-            </tr>
-        </thead>
+        <Body>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>STUDENT DOCUMENT</th>
+                        <th>STUDENT NAME</th>
+                        <th>ACTIVITY NAME</th>
+                        <th>PERCENTAGE</th>
+                    </tr>
+                </thead>
                 <tbody>
                     @foreach (var processedActivity in ProcessedActivities)
                     {
@@ -45,10 +46,9 @@
                         </tr>
                     }
                 </tbody>
-    </table>
-     </Body>
-
-        </GenericList>  
+            </table>
+        </Body>
+    </GenericList>
 
     <div class="pagination">
         <Pagination CurrentPage="currentPage"
@@ -57,10 +57,7 @@
     </div>
 </div>
 
-
 @code {
-
-
     [Parameter]
     [SupplyParameterFromQuery]
     public string Page { get; set; } = "";
@@ -72,35 +69,58 @@
     IModalService Modal { get; set; } = default!;
 
     private List<(string Document, string FullName, string Title, int Percentage)> ProcessedActivities { get; set; } = new();
-
-    protected async override Task OnInitializedAsync()
-    {
-        await LoadAsync();
-    }
-
-    private int currentPage = 1;
-    private int totalPages;
-
     private List<User> YoungUsers { get; set; } = new();
     private List<ActivityColection> ActivitiesCollection { get; set; }
 
     private ActivityColection activiti = new();
-
-
     private User Users = new();
-
     private Activity activity = new();
-
     private Tutor tutor = new();
-
     private Young young = new();
 
     private int selectedStudentId;
+    private int currentPage = 1;
+    private int totalPages;
+    private int loggedInTutorId;
 
-    private async Task StudentActivityAsync(int youngId, int activityId)
+
+    [CascadingParameter]
+
+    private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
+
+    private async  Task ParametersSetAsync()
+
     {
-        await Student(youngId);
-        await Activity(activityId);
+
+        var authenticationState = await authenticationStateTask;
+
+
+
+        var UserId = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Document"); ;
+
+
+
+        if (UserId is not null)
+
+        {
+            var Id = UserId.Value;
+            var responseHTTP = await repository.GetAsync<Tutor>($"api/Tutors/{Id}");
+            tutor = responseHTTP.Response;
+
+            if (responseHTTP.Response != null)
+            {
+                loggedInTutorId = tutor.Id;
+            }
+        }        
+     
+
+
+    }
+    protected async override Task OnInitializedAsync()
+    {
+
+        await ParametersSetAsync();
+        await LoadAsync();
     }
 
     private async Task SelectedPage(int page)
@@ -109,68 +129,28 @@
         await LoadAsync(page);
     }
 
-
-
-    private async Task Activity(int id)
-    {      
-
-        var responseHTTP = await repository.GetAsync<Activity>($"api/Activitys/{id}");
-
-        activity = responseHTTP.Response;
-       
-
-    }
-
-    private async Task Student(int id)
-    {
-        var responseHTTP = await repository.GetAsync<Young>($"api/Youngs/{id}");
-
-        young = responseHTTP.Response;
-
-        var responseHTTP2 = await repository.GetAsync<User>($"api/Users/{young.UserDocument}");
-
-        Users = responseHTTP2.Response;
-       
-
-    }
-
-    
-
-   
-
-   
-
-   
-
-
-
-
     private async Task LoadAsync(int page = 1)
     {
-
         if (!string.IsNullOrWhiteSpace(Page))
         {
             page = Convert.ToInt32(Page);
         }
-        string url1 = string.Empty;
-        string url2 = string.Empty;
-        if (string.IsNullOrEmpty(Filter))
-        {
-            url1 = $"api/ActivityCollection?page={page}";
-            url2 = $"api/ActivityCollection/totalPages";
-        }
-        else
-        {
-            url1 = $"api/ActivityCollection?page={page}&filter={Filter}";
-            url2 = $"api/ActivityCollection/totalPages?filter={Filter}";
-        }
 
-        var responseHppt = await repository.GetAsync<List<ActivityColection>>(url1);
-        var responseHppt2 = await repository.GetAsync<int>(url2);   
-        var responseHTTP3 = await repository.GetAsync<List<User>>("api/Users");
-        ActivitiesCollection = responseHppt.Response!;
-        totalPages = responseHppt2.Response!;
-        YoungUsers = responseHTTP3.Response!.Where(u => u.UserType.ToString() == "Young").ToList();
+        string url1 = string.IsNullOrEmpty(Filter)
+     ? $"api/ActivityCollection?page={page}&tutorId={loggedInTutorId}"
+     : $"api/ActivityCollection?page={page}&filter={Filter}&tutorId={loggedInTutorId}";
+
+        string url2 = string.IsNullOrEmpty(Filter)
+            ? $"api/ActivityCollection/totalPages?tutorId={loggedInTutorId}"
+            : $"api/ActivityCollection/totalPages?filter={Filter}&tutorId={loggedInTutorId}";
+
+        var responseActivities = await repository.GetAsync<List<ActivityColection>>(url1);
+        var responseTotalPages = await repository.GetAsync<int>(url2);
+        var responseUsers = await repository.GetAsync<List<User>>("api/Users");
+
+        ActivitiesCollection = responseActivities.Response!;
+        totalPages = responseTotalPages.Response!;
+        YoungUsers = responseUsers.Response!.Where(u => u.UserType.ToString() == "Young").ToList();
         ProcessedActivities.Clear();
 
         foreach (var activiti in ActivitiesCollection)
@@ -180,32 +160,29 @@
 
             ProcessedActivities.Add((Users.Document, Users.FullName, activity.Title, activity.Percentage));
         }
-
-
-
     }
 
+    private async Task Activity(int id)
+    {
+        var responseHTTP = await repository.GetAsync<Activity>($"api/Activitys/{id}");
+        activity = responseHTTP.Response;
+    }
 
-     
+    private async Task Student(int id)
+    {
+        var responseHTTP = await repository.GetAsync<Young>($"api/Youngs/id/{id}");
+        young = responseHTTP.Response;
+        var responseHTTP2 = await repository.GetAsync<User>($"api/Users/{young.UserDocument}");
+        Users = responseHTTP2.Response;
+    }
 
     private void UploadActivity()
     {
-
+        // Lógica para cargar la actividad
     }
 
     private void SendActivities()
     {
         // Lógica para enviar datos al servidor o procesar actividades
     }
-
-    private void PreviousPage()
-    {
-        if (currentPage > 1) currentPage--;
-    }
-
-    private void NextPage()
-    {
-        currentPage++;
-    }
-
 }

@@ -9,6 +9,9 @@ namespace NexusProject.API.Helpers
 {
     public interface IUserHelper
     {
+        Task<IdentityResult> RegisterUserWithRoleAsync(User user, string password, string roleName);
+
+
         Task<User> GetUserAsync(string email);
 
         Task<IdentityResult> AddUserAsync(User user, string password);

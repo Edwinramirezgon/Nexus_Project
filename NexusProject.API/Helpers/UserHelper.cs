@@ -1,5 +1,4 @@
-﻿//this class contains the methods of security for users (user,role, password)
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NexusProject.API.Data;
 using NexusProject.Shared.DTOs;
@@ -11,7 +10,6 @@ namespace NexusProject.API.Helpers
 {
     public class UserHelper : IUserHelper
     {
-
         private readonly DataContext _context;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -42,7 +40,18 @@ namespace NexusProject.API.Helpers
 
         public async Task AddUserToRoleAsync(User user, string roleName)
         {
+            // Verifica si el rol existe antes de asignarlo
+            await CheckRoleAsync(roleName);
+
+            // Asigna el rol al usuario
             await _userManager.AddToRoleAsync(user, roleName);
+
+            // Verifica la asignación de rol
+            bool isInRole = await _userManager.IsInRoleAsync(user, roleName);
+            if (!isInRole)
+            {
+                throw new Exception($"El rol '{roleName}' no fue asignado correctamente al usuario.");
+            }
         }
 
         public async Task CheckRoleAsync(string roleName)
@@ -50,25 +59,18 @@ namespace NexusProject.API.Helpers
             bool roleExists = await _roleManager.RoleExistsAsync(roleName);
             if (!roleExists)
             {
-                await _roleManager.CreateAsync(new IdentityRole
-                {
-                    Name = roleName
-                });
+                await _roleManager.CreateAsync(new IdentityRole { Name = roleName });
             }
         }
 
         public async Task<User> GetUserAsync(string email)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(x => x.Email == email);
-            return user!;
+            return await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
         }
 
         public async Task<User> GetUserAsync(Guid userId)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(x => x.Id == userId.ToString());
-            return user!;
+            return await _context.Users.FirstOrDefaultAsync(x => x.Id == userId.ToString());
         }
 
         public async Task<IdentityResult> ChangePasswordAsync(User user, string currentPassword, string newPassword)
@@ -104,6 +106,11 @@ namespace NexusProject.API.Helpers
         public async Task<IdentityResult> ResetPasswordAsync(User user, string token, string password)
         {
             return await _userManager.ResetPasswordAsync(user, token, password);
+        }
+
+        public Task<IdentityResult> RegisterUserWithRoleAsync(User user, string password, string roleName)
+        {
+            throw new NotImplementedException();
         }
     }
 }
