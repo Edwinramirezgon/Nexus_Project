@@ -34,6 +34,11 @@ namespace NexusProject.API.Data
             modelBuilder.Entity<Tutor>() .HasOne(t => t.Users).WithMany().HasForeignKey(t => t.UserDocument).HasPrincipalKey(u => u.Document);
             modelBuilder.Entity<Young>().HasOne(t => t.Users).WithMany().HasForeignKey(t => t.UserDocument).HasPrincipalKey(u => u.Document);
             modelBuilder.Entity<Admin>().HasOne(t => t.Users).WithMany().HasForeignKey(t => t.UserDocument).HasPrincipalKey(u => u.Document);
+            modelBuilder.Entity<ActivityColection>().HasOne(t => t.Activities).WithMany().HasForeignKey(t => t.ActivitiesId).HasPrincipalKey(u => u.Id);
+            modelBuilder.Entity<ActivityColection>().HasOne(t => t.Tutors).WithMany().HasForeignKey(t => t.TutorsId).HasPrincipalKey(u => u.Id);
+            modelBuilder.Entity<ActivityColection>().HasOne(t => t.Youngs).WithMany().HasForeignKey(t => t.Youngid).HasPrincipalKey(u => u.Id);
+
+
 
         }
     }

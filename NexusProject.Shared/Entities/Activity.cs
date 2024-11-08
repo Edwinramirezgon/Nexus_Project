@@ -22,6 +22,9 @@ namespace NexusProject.Shared.Entities
         public string Description { get; set; }
         public DateTime DateandTime { get; set; }
 
+        public int Percentage { get; set; }
+
+
 
         [JsonIgnore]
         public ICollection<ActivityColection> ActivityColections { get; set; }

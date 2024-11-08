@@ -1,6 +1,8 @@
 ﻿using NexusProject.API.Helpers;
 using NexusProject.Shared.Entities;
 using NexusProject.Shared.Enums;
+using System.ComponentModel.DataAnnotations;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -30,6 +32,9 @@ namespace NexusProject.API.Data
             await CheckYoungAsync();
             await CheckTutorAsync();
             await CheckAdminAsync();
+            await CheckActivityAsync();
+            await CheckActivitycollectionAsync();
+
 
         }
 
@@ -72,6 +77,31 @@ namespace NexusProject.API.Data
             return user;
         }
 
+
+
+        private async Task CheckActivitycollectionAsync()
+
+
+    
+
+        {
+            if (!_context.ActivityColections.Any())
+            {
+                _context.ActivityColections.Add(new ActivityColection { Youngid = 1, TutorsId = 1, ActivitiesId = 1 });
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task CheckActivityAsync()
+
+
+        {
+            if (!_context.Activitys.Any())
+            {
+                _context.Activitys.Add(new Activity { Title = "Math Derivate", Description = "Derivate", Percentage = 20});
+            }
+            await _context.SaveChangesAsync();
+        }
         private async Task CheckYoungAsync()
         {
             if (!_context.Youngs.Any())

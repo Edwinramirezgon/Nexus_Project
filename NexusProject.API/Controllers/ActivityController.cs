@@ -12,15 +12,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace NexusProject.API.Controllers
 {
+
     [ApiController]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Route("/api/Youngs")]
-    public class YoungController : ControllerBase
+    [Route("/api/Activitys")]
+    public class ActivityController : ControllerBase
     {
 
         private readonly DataContext _context;
 
-        public YoungController(DataContext context)
+        //Constructor
+        public ActivityController(DataContext context)
         {
             _context = context;
         }
@@ -28,11 +30,11 @@ namespace NexusProject.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAsync([FromQuery] PaginationDTO pagination)
         {
-            var queryable = _context.Youngs
+            var queryable = _context.Activitys
              .AsQueryable();
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
-                queryable = queryable.Where(x => x.Id.ToString().Contains(pagination.Filter.ToLower()));
+                queryable = queryable.Where(x => x.Title.ToLower().Contains(pagination.Filter.ToLower()));
             }
             return Ok(await queryable
             .OrderBy(x => x.Id)
@@ -44,10 +46,10 @@ namespace NexusProject.API.Controllers
         public async Task<ActionResult> GetPages([FromQuery] PaginationDTO pagination)
 
         {
-            var queryable = _context.Youngs.AsQueryable();
+            var queryable = _context.Activitys.AsQueryable();
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
-                queryable = queryable.Where(x => x.Id.ToString().Contains(pagination.Filter.ToLower()));
+                queryable = queryable.Where(x => x.Title.ToLower().Contains(pagination.Filter.ToLower()));
             }
             double count = await queryable.CountAsync();
             double totalPages = Math.Ceiling(count / pagination.RecordsNumber);
@@ -56,64 +58,64 @@ namespace NexusProject.API.Controllers
 
         //Method Create
         [HttpPost]
-        public async Task<ActionResult> PostAsync(Young young)
+        public async Task<ActionResult> PostAsync(Activity activity)
         {
-            _context.Add(young);
-
-            await _context.SaveChangesAsync();
-            return Ok(young);
-
-
+            _context.Add(activity);
+         
+                    await _context.SaveChangesAsync();
+                    return Ok(activity);
+               
         }
 
         //Method Get by ID (Read)
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult> GetAsync(int id)
+        [HttpGet("{Code:int}")]
+        public async Task<ActionResult> GetAsync(int Code)
         {
-            var young = await _context.Youngs.FirstOrDefaultAsync
-                (x => x.Id == id);
+            var activity = await _context.Activitys.FirstOrDefaultAsync
+                (x => x.Id == Code);
 
-            if (young == null)
+            if (activity == null)
             {
                 return NotFound();
             }
-            return Ok(young);
+            return Ok(activity);
         }
 
         //Method Update
         [HttpPut]
-        public async Task<ActionResult> PutAsync(Young young)
+        public async Task<ActionResult> PutAsync(Activity activity)
         {
-            _context.Update(young);
+            _context.Update(activity);
 
-            await _context.SaveChangesAsync();
-            return Ok(young);
-
+                    await _context.SaveChangesAsync();
+                    return Ok(activity);
+              
         }
 
         //Metod Delete
-        [HttpDelete("{id:int}")]
-        public async Task<ActionResult> DeleteAsync(int id)
+        [HttpDelete("{Code:int}")]
+        public async Task<ActionResult> DeleteAsync(int Code)
         {
-            var young = await _context.Youngs.FirstOrDefaultAsync
-                  (x => x.Id == id);
+            var activity = await _context.Activitys.FirstOrDefaultAsync
+                  (x => x.Id == Code);
 
-            if (young == null)
+            if (activity == null)
             {
                 return NotFound();
             }
-            _context.Remove(young);
+            _context.Remove(activity);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
+
         [AllowAnonymous]
         [HttpGet("combo")]
         public async Task<ActionResult> GetCombo()
         {
-            return Ok(await _context.Youngs.ToListAsync());
+            return Ok(await _context.Activitys.ToListAsync());
         }
-
     }
+
 }

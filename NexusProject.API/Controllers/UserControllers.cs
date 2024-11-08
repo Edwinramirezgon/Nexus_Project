@@ -77,7 +77,7 @@ namespace NexusProject.API.Controllers
             public async Task<ActionResult> GetAsync(string id)
             {
                 var user = await _context.Users.FirstOrDefaultAsync
-                    (x => x.Id.Equals(id));
+                    (x => x.Document.Equals(id));
 
                 if (user == null)
                 {

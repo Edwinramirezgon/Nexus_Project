@@ -11,6 +11,7 @@ namespace NexusProject.Shared.Entities
     public class ActivityColection
     {
 
+
         public int Id { get; set; }
 
         [ForeignKey("YoungsId")]

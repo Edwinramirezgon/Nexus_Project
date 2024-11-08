@@ -337,5 +337,68 @@ body3 {
     max-height: 400px;
 }
 
+.container {
+    width: 60%;
+    margin: auto;
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+h4 {
+    background-color: #5DACBD;
+    color: black;
+    text-align: center;
+    padding: 15px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.form-section {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+    .form-section input {
+        padding: 8px;
+        width: 100px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .form-section button {
+        background-color: #5DACBD;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+        .form-section button:hover {
+            background-color: #3a91a3;
+        }
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+    .table th, .table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+    }
+
+    .table th {
+        background-color: #f4f4f4;
+        font-weight: bold;
+    }
+
+    .table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
     
 

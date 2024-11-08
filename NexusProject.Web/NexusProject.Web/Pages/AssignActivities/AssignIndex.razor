@@ -5,130 +5,50 @@
 @attribute [Authorize(Roles = "Admin, Tutor")]
 <PageTitle>Assign Activities</PageTitle>
 
-
-<style>
-    .container {
-        width: 60%;
-        margin: auto;
-        text-align: center;
-        font-family: Arial, sans-serif;
-    }
-
-    h4 {
-        background-color: #5DACBD;
-        color: black;
-        text-align: center;
-        padding: 15px;
-        font-weight: bold;
-        margin: 0;
-    }
-
-    .form-section {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin: 20px 0;
-    }
-
-        .form-section input {
-            padding: 8px;
-            width: 100px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .form-section button {
-            background-color: #5DACBD;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-            .form-section button:hover {
-                background-color: #3a91a3;
-            }
-
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-    }
-
-        .table th, .table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-        }
-
-        .table th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
-
-        .table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-    .pagination {
-        margin-top: 10px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-    }
-
-        .pagination button {
-            background-color: #5DACBD;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-            .pagination button:hover {
-                background-color: #3a91a3;
-            }
-
-        .pagination span {
-            font-size: 16px;
-        }
-</style>
-
 <h4>ASSIGN ACTIVITIES</h4>
 
 <div class="container">
     <div class="form-section">       
-        <input placeholder="Student Name" @bind="@newActivity.StudentName" />
-        <input placeholder="Activity Name" @bind="@newActivity.ActivityName" />
-        <input placeholder="Percentage" @bind="@newActivity.Percentage" />
+        <select @bind="@selectedStudentId">
+            <option value="">Select a Student</option>
+            @foreach (var user in YoungUsers)
+            {
+                <option value="@user.Id">@user.FullName</option>
+            }
+        </select>
+        <input placeholder="Activity Name" @bind="@activity.Title" />
+        <input placeholder="Percentage" @bind="@activity.Percentage" />
 
         <button @onclick="UploadActivity">Upload</button>
         <button @onclick="SendActivities">Send</button>
     </div>
 
+    <GenericList MyList="ActivitiesCollection">
+      <Body>
     <table class="table">
         <thead>
             <tr>
-                <th>ID STUDENT</th>
+                <th>STUDENT DOCUMENT</th>
                 <th>STUDENT NAME</th>
                 <th>ACTIVITY NAME</th>
                 <th>PERCENTAGE</th>
             </tr>
         </thead>
-        <tbody>
-            @foreach (var activity in activities)
-            {
-                <tr>
-                    <td>@activity.StudentId</td>
-                    <td>@activity.StudentName</td>
-                    <td>@activity.ActivityName</td>
-                    <td>@activity.Percentage%</td>
-                </tr>
-            }
-        </tbody>
+                <tbody>
+                    @foreach (var processedActivity in ProcessedActivities)
+                    {
+                        <tr>
+                            <td>@processedActivity.Document</td>
+                            <td>@processedActivity.FullName</td>
+                            <td>@processedActivity.Title</td>
+                            <td>@processedActivity.Percentage %</td>
+                        </tr>
+                    }
+                </tbody>
     </table>
+     </Body>
+
+        </GenericList>  
 
     <div class="pagination">
         <Pagination CurrentPage="currentPage"
@@ -136,6 +56,7 @@
                     SelectedPage="SelectedPage" />
     </div>
 </div>
+
 
 @code {
 
@@ -150,11 +71,37 @@
     [CascadingParameter]
     IModalService Modal { get; set; } = default!;
 
+    private List<(string Document, string FullName, string Title, int Percentage)> ProcessedActivities { get; set; } = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
     private int currentPage = 1;
     private int totalPages;
 
+    private List<User> YoungUsers { get; set; } = new();
+    private List<ActivityColection> ActivitiesCollection { get; set; }
+
+    private ActivityColection activiti = new();
 
 
+    private User Users = new();
+
+    private Activity activity = new();
+
+    private Tutor tutor = new();
+
+    private Young young = new();
+
+    private int selectedStudentId;
+
+    private async Task StudentActivityAsync(int youngId, int activityId)
+    {
+        await Student(youngId);
+        await Activity(activityId);
+    }
 
     private async Task SelectedPage(int page)
     {
@@ -163,6 +110,37 @@
     }
 
 
+
+    private async Task Activity(int id)
+    {      
+
+        var responseHTTP = await repository.GetAsync<Activity>($"api/Activitys/{id}");
+
+        activity = responseHTTP.Response;
+       
+
+    }
+
+    private async Task Student(int id)
+    {
+        var responseHTTP = await repository.GetAsync<Young>($"api/Youngs/{id}");
+
+        young = responseHTTP.Response;
+
+        var responseHTTP2 = await repository.GetAsync<User>($"api/Users/{young.UserDocument}");
+
+        Users = responseHTTP2.Response;
+       
+
+    }
+
+    
+
+   
+
+   
+
+   
 
 
 
@@ -178,44 +156,41 @@
         string url2 = string.Empty;
         if (string.IsNullOrEmpty(Filter))
         {
-            url1 = $"api/Users?page={page}";
-            url2 = $"api/Users/totalPages";
+            url1 = $"api/ActivityCollection?page={page}";
+            url2 = $"api/ActivityCollection/totalPages";
         }
         else
         {
-            url1 = $"api/Users?page={page}&filter={Filter}";
-            url2 = $"api/Users/totalPages?filter={Filter}";
+            url1 = $"api/ActivityCollection?page={page}&filter={Filter}";
+            url2 = $"api/ActivityCollection/totalPages?filter={Filter}";
         }
 
-        var responseHppt = await repository.GetAsync<List<User>>(url1);
-        var responseHppt2 = await repository.GetAsync<int>(url2);      
+        var responseHppt = await repository.GetAsync<List<ActivityColection>>(url1);
+        var responseHppt2 = await repository.GetAsync<int>(url2);   
+        var responseHTTP3 = await repository.GetAsync<List<User>>("api/Users");
+        ActivitiesCollection = responseHppt.Response!;
         totalPages = responseHppt2.Response!;
+        YoungUsers = responseHTTP3.Response!.Where(u => u.UserType.ToString() == "Young").ToList();
+        ProcessedActivities.Clear();
 
+        foreach (var activiti in ActivitiesCollection)
+        {
+            await Student(activiti.Youngid);
+            await Activity(activiti.ActivitiesId);
+
+            ProcessedActivities.Add((Users.Document, Users.FullName, activity.Title, activity.Percentage));
+        }
 
 
 
     }
 
 
-    private List<Activity> activities = new List<Activity>
-    {
-        new Activity { StudentId = 1, StudentName = "Juanito", ActivityName = "Sport", Percentage = 20 },
-        new Activity { StudentId = 2, StudentName = "Edwin Ramirez", ActivityName = "Meditation", Percentage = 20 },
-        new Activity { StudentId = 3, StudentName = "Valentina", ActivityName = "Broking hearts", Percentage = 100 }
-    };
-
-    private Activity newActivity = new Activity();
+     
 
     private void UploadActivity()
     {
-        activities.Add(new Activity
-            {
-                StudentId = newActivity.StudentId,
-                StudentName = newActivity.StudentName,
-                ActivityName = newActivity.ActivityName,
-                Percentage = newActivity.Percentage
-            });
-        newActivity = new Activity();
+
     }
 
     private void SendActivities()
@@ -233,11 +208,4 @@
         currentPage++;
     }
 
-    public class Activity
-    {
-        public int StudentId { get; set; }
-        public string StudentName { get; set; }
-        public string ActivityName { get; set; }
-        public int Percentage { get; set; }
-    }
 }

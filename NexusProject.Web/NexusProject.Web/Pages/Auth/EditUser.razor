@@ -1,5 +1,5 @@
 ﻿@page "/EditUser"
-@attribute [Authorize(Roles = "Admin , User")]
+@attribute [Authorize(Roles = "Admin , Tutor, Young")]
 @inject IRepository repository
 @inject SweetAlertService sweetAlertService
 @inject NavigationManager navigationManager
