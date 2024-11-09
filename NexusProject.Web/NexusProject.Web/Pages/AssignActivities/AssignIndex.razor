@@ -64,26 +64,36 @@
     <GenericList MyList="ActivitiesCollection">
 
 
+
+
         <Body>
             <table class="table">
                 <thead>
                     <tr>
+                        <th>Activity ID</th>
                         <th>STUDENT DOCUMENT</th>
                         <th>STUDENT NAME</th>
                         <th>ACTIVITY NAME</th>
                         <th>ACTIVITY DESCRIPTION</th>
+                        <th>ACTIVITY DUE DATE</th>
                         <th>ACTIVITY FILE</th>
                         <th>PERCENTAGE</th>
+                        <th>RECEIVED FILE</th>
+                        <th>DELIVERED TIME</th>
+
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var processedActivity in ProcessedActivities)
                     {
                         <tr>
+                            <td>@processedActivity.id</td>
                             <td>@processedActivity.Document</td>
                             <td>@processedActivity.FullName</td>
                             <td>@processedActivity.Title</td>
                             <td>@processedActivity.Description</td>
+                            <td>@processedActivity.DateandTime.ToString("yyyy-MM-dd")</td>
+
                             <td>
                                 @if (!string.IsNullOrEmpty(processedActivity.File))
                                 {
@@ -97,6 +107,20 @@
                                 }
                             </td>
                             <td>@processedActivity.Percentage %</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(processedActivity.File2))
+                                {
+                                    <a href="@processedActivity.File2" target="_blank" class="btn btn-link">
+                                        Download File
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>No file uploaded</span>
+                                }
+                            </td>
+                            <td>@processedActivity.SenDate.ToString("yyyy-MM-dd--HH--mm")</td>
+
                         </tr>
                     }
                 </tbody>
@@ -122,7 +146,9 @@
     [CascadingParameter]
     IModalService Modal { get; set; } = default!;
 
-    private List<(string Document, string FullName, string Title, string Description, String File, int Percentage)> ProcessedActivities { get; set; } = new();
+   
+
+    private List<(int id, string Document, string FullName, string Title, string Description, DateTime DateandTime, string File, int Percentage, string File2, DateTime SenDate )> ProcessedActivities { get; set; } = new();
     private List<User> YoungUsers { get; set; } = new();
     private List<ActivityColection> ActivitiesCollection { get; set; }
 
@@ -217,7 +243,7 @@
     protected async override Task OnInitializedAsync()
     {
       
-
+        activity2.DateandTime = DateTime.Today;
         await ParametersSetAsync();
         await LoadAsync();
     }
@@ -257,7 +283,8 @@
             await Student(activiti.Youngid);
             await Activity(activiti.ActivitiesId);
 
-            ProcessedActivities.Add((Users.Document, Users.FullName, activity.Title, activity.Description, activity.FileTask, activity.Percentage));
+            ProcessedActivities.Add((activity.Id, Users.Document, Users.FullName, activity.Title, activity.Description, activity.DateandTime, activity.FileTask, activity.Percentage,
+            activity.SendTask, activity.SendTime));
         }
     }
 

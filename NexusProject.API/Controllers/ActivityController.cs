@@ -62,7 +62,25 @@ namespace NexusProject.API.Controllers
         }
 
 
-        
+        [HttpPost("CreateActivity")]
+        public async Task<ActionResult> CreateActivity([FromBody] Activity model)
+        {
+
+            Activity activity = model;
+
+            if (!string.IsNullOrEmpty(model.FileTask))
+            {
+                var Filetask = Convert.FromBase64String(model.FileTask);
+                model.FileTask = await _fileStorage.SaveFileAsync(Filetask, ".pdf", _container);
+            }
+
+            _context.Add(activity);
+            await _context.SaveChangesAsync();
+
+            return Ok(activity);
+
+        } 
+
 
         //Method Create
         [HttpPost]
@@ -88,6 +106,7 @@ namespace NexusProject.API.Controllers
             }
             return Ok(activity);
         }
+
 
         //Method Update
         [HttpPut]

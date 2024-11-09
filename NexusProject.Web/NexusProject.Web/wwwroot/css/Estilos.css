@@ -388,5 +388,18 @@ h4 {
         background-color: #f9f9f9;
     }
 
+
+    .table button {
+        background-color: #5DACBD;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+        .table button:hover {
+            background-color: #3a91a3;
+        }
     
 

@@ -1,0 +1,272 @@
+﻿@page "/CheckActivities"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+@inject AuthenticationStateProvider authenticationStateProvider
+@attribute [Authorize(Roles = "Admin, Young")]
+<PageTitle>Assign Activities</PageTitle>
+
+<h4>CHECK YOUR ACTIVITIES</h4>
+
+<div class="container">
+    
+
+    <GenericList MyList="ActivitiesCollection">
+
+
+        <Body>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ACTIVITY ID</th>
+                        <th>TUTOR NAME</th>
+                        <th>ACTIVITY NAME</th>
+                        <th>ACTIVITY DESCRIPTION</th>
+                        <th>ACTIVITY DUE DATE</th>                 
+                        <th>PERCENTAGE</th>
+                        <th>UPLOAD</th>
+                        <th>SEND</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var processedActivity in ProcessedActivities)
+                    {
+                        <tr>
+                            <td>@processedActivity.ID</td>
+                            <td>@processedActivity.FullName</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(processedActivity.File))
+                                {
+                                    <a href="@processedActivity.File" target="_blank" class="btn btn-link">
+                                        @processedActivity.Title
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>@processedActivity.Title</span>
+                                }
+                            </td>                           
+                            <td>@processedActivity.Description</td>
+                            <td>@processedActivity.DateandTime.ToString("yyyy-MM-dd")</td>
+                            <td>@processedActivity.Percentage %</td>
+                            <td> <InputFile id="fileUpload" OnChange="OnChange" accept=".pdf, .docx, .xlsx, .doc, .xls, .jpeg, .png, .jpg" /></td>
+                            <td> <button class="btn btn-primary" @onclick="() => SendActivities(processedActivity.ID)">Send</button></td>
+
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </Body>
+    </GenericList>
+
+    <div class="pagination">
+        <Pagination CurrentPage="currentPage"
+                    TotalPages="totalPages"
+                    SelectedPage="SelectedPage" />
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Page { get; set; } = "";
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Filter { get; set; } = "";
+
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+
+    private List<(int ID, string FullName, string Title, string Description, DateTime DateandTime, string File, int Percentage)> ProcessedActivities { get; set; } = new();
+    private List<User> YoungUsers { get; set; } = new();
+    private List<ActivityColection> ActivitiesCollection { get; set; }
+
+    private ActivityColection activiti = new();
+    private User Users = new();
+    private Activity activity = new();
+    private Activity activity2 = new();
+    private Tutor tutor = new();
+    private Young young = new();
+    private string selectedStudentId;
+    private string Sendtask;
+    private int currentPage = 1;
+    private int totalPages;
+    private int loggedInYoungId;
+
+
+
+    [Parameter] public string? FileURL { get; set; }
+
+    [Parameter] public EventCallback<string> FileSelected { get; set; }
+
+    private string? FileBase64;
+
+    private async Task OnChange(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            if (file != null)
+            {
+                // Crear el contenido multipart
+                var content = new MultipartFormDataContent();
+                var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10485760)); // 10MB max
+                content.Add(fileContent, "file", file.Name);
+
+                // Llamar al endpoint de carga de archivos
+                var response = await repository.UploadFile(content, "api/file/upload");
+
+                if (!response.Error)
+                {
+
+                    Sendtask = response.Response;
+                    FileURL = response.Response;
+                    await FileSelected.InvokeAsync(response.Response);
+                    StateHasChanged();
+                }
+                else
+                {
+                    var errorMessage = await response.GetErrorMessageAsync();
+                    await sweetAlertService.FireAsync("Error", errorMessage, SweetAlertIcon.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await sweetAlertService.FireAsync("Error", $"Error uploading file: {ex.Message}", SweetAlertIcon.Error);
+        }
+    }
+
+
+    [CascadingParameter]
+
+    private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
+
+    private async Task ParametersSetAsync()
+
+    {
+
+        var authenticationState = await authenticationStateTask;
+
+
+
+        var UserId = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Document"); ;
+
+
+
+        if (UserId is not null)
+
+        {
+            var Id = UserId.Value;
+            var responseHTTP = await repository.GetAsync<Young>($"api/Youngs/{Id}");
+            young = responseHTTP.Response;
+
+            if (responseHTTP.Response != null)
+            {
+                loggedInYoungId = young.Id;
+            }
+        }
+
+
+
+    }
+    protected async override Task OnInitializedAsync()
+    {
+
+
+        await ParametersSetAsync();
+        await LoadAsync();
+    }
+
+    private async Task SelectedPage(int page)
+    {
+        currentPage = page;
+        await LoadAsync(page);
+    }
+
+    private async Task LoadAsync(int page = 1)
+    {
+        if (!string.IsNullOrWhiteSpace(Page))
+        {
+            page = Convert.ToInt32(Page);
+        }
+
+        string url1 = string.IsNullOrEmpty(Filter)
+      ? $"api/ActivityCollection2?page={page}&Youngid={loggedInYoungId}"
+      : $"api/ActivityCollection2?page={page}&filter={Filter}&Youngid={loggedInYoungId}";
+
+        string url2 = string.IsNullOrEmpty(Filter)
+            ? $"api/ActivityCollection2/totalPages?Youngid={loggedInYoungId}"
+            : $"api/ActivityCollection2/totalPages?filter={Filter}&Youngid={loggedInYoungId}";
+
+        var responseActivities = await repository.GetAsync<List<ActivityColection>>(url1);
+        var responseTotalPages = await repository.GetAsync<int>(url2);
+        var responseUsers = await repository.GetAsync<List<User>>("api/Users");
+
+
+
+        ActivitiesCollection = responseActivities.Response!;
+        totalPages = responseTotalPages.Response!;    
+        ProcessedActivities.Clear();
+
+        foreach (var activiti in ActivitiesCollection)
+        {
+            await Student(activiti.Youngid);
+            await Activity(activiti.ActivitiesId);
+
+            ProcessedActivities.Add((activity.Id, Users.FullName, activity.Title, activity.Description, activity.DateandTime, activity.FileTask, activity.Percentage));
+
+        }
+    }
+
+    private async Task Activity(int id)
+    {
+        var responseHTTP = await repository.GetAsync<Activity>($"api/Activitys/{id}");
+        activity = responseHTTP.Response;
+    }
+
+    private async Task Student(int id)
+    {
+        var responseHTTP = await repository.GetAsync<Young>($"api/Youngs/id/{id}");
+        young = responseHTTP.Response;
+        var responseHTTP2 = await repository.GetAsync<User>($"api/Users/{young.UserDocument}");
+        Users = responseHTTP2.Response;
+    }
+
+
+
+
+    private async Task SendActivities(int id)
+    {
+
+        try
+        {
+            var responseHTTP = await repository.GetAsync<Activity>($"api/Activitys/{id}");
+            activity2 = responseHTTP.Response;
+            activity2.SendTask = Sendtask;
+            activity2.SendTime = DateTime.Now;
+            var responseHttp2 = await repository.PutAsync<Activity, Activity>("/api/Activitys", activity2);
+
+            if (responseHttp2.Error)
+            {
+                var message = await responseHttp2.GetErrorMessageAsync();
+                await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return;
+            }
+
+
+            await sweetAlertService.FireAsync("Success", "Your activity has been successfully Sended.", SweetAlertIcon.Info);
+            navigationManager.NavigateTo("/CheckActivities", true);
+
+        }
+        catch (Exception ex)
+        {
+
+            await sweetAlertService.FireAsync("Error", $"An error occurred: {ex.Message}", SweetAlertIcon.Error);
+        }
+    }
+}
+
+
+

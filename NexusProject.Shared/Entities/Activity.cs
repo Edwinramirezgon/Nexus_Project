@@ -22,9 +22,14 @@ namespace NexusProject.Shared.Entities
         public string Description { get; set; }
         public DateTime DateandTime { get; set; }
 
+        public DateTime SendTime { get; set; }
+
         public int Percentage { get; set; }
 
         public string? FileTask { get; set; }
+
+        public string? SendTask { get; set; }
+
 
 
 
