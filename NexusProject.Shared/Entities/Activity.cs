@@ -24,6 +24,8 @@ namespace NexusProject.Shared.Entities
 
         public int Percentage { get; set; }
 
+        public string FileTask { get; set; }
+
 
 
         [JsonIgnore]

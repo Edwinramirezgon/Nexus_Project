@@ -9,20 +9,64 @@
 <h4>ASSIGN ACTIVITIES</h4>
 
 <div class="container">
-    <div class="form-section">
-        <select @bind="@selectedStudentId">
-            <option value="">Select a Student</option>
-            @foreach (var user in YoungUsers)
-            {
-                <option value="@user.Id">@user.FullName</option>
-            }
-        </select>
-        <input placeholder="Activity Name" @bind="@activity.Title" />
-        <input placeholder="Percentage" @bind="@activity.Percentage" />
+<EditForm Model="activiti" >
 
+        <DataAnnotationsValidator />
+
+
+        <div class="form-section">
+
+            
+
+                <select  @bind="@selectedStudentId">
+                    <option value="0">Select a Student</option>
+                    @foreach (var user in YoungUsers)
+                    {
+                        <option value="@user.Document">@user.FullName</option>
+                    }
+                </select>
+          
+
+            
+                    <div>
+                <label for="floatingInput3">Activity Name</label>
+
+                <InputText class="form-control col-1" id="floatingInput" placeholder="Activity Name" @bind-Value="@activity2.Title" />
+                <ValidationMessage For="@(() => activity2.Title)" />
+            </div>
+            <div>
+            <label for="floatingInput2">Activity %</label>
+            <InputNumber class="form-control col-1" id="floatingInput2" placeholder="Activity Percentage" @bind-Value="@activity2.Percentage" />
+
+            <ValidationMessage For="@(() => activity2.Percentage)" />
+
+            </div>
+
+
+               
+
+            <div>
+                <label for="floatingInput4">Maximum Date</label>
+            <InputDate class="form-control" id="floatingInput4" placeholder="Activity Last Date To Send" @bind-Value="@activity2.DateandTime" />
+
+            <ValidationMessage For="@(() => activity2.DateandTime)" />
+            </div>
+            <div>
+                <label for="floatingInput3">Activity Description</label>
+
+                <InputText class="form-control col-3" id="floatingInput3" placeholder="Activity Description&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;" @bind-Value="@activity2.Description" />
+
+                <ValidationMessage For="@(() => activity2.Description)" />
+            </div>
+
+            
         <button @onclick="UploadActivity">Upload</button>
+               
         <button @onclick="SendActivities">Send</button>
-    </div>
+
+    
+        </div>
+</EditForm>
 
     <GenericList MyList="ActivitiesCollection">
         <Body>
@@ -32,6 +76,8 @@
                         <th>STUDENT DOCUMENT</th>
                         <th>STUDENT NAME</th>
                         <th>ACTIVITY NAME</th>
+                        <th>ACTIVITY DESCRIPTION</th>
+                        <th>ACTIVITY FILE</th>
                         <th>PERCENTAGE</th>
                     </tr>
                 </thead>
@@ -42,6 +88,8 @@
                             <td>@processedActivity.Document</td>
                             <td>@processedActivity.FullName</td>
                             <td>@processedActivity.Title</td>
+                            <td>@processedActivity.Description</td>
+                            <td>@processedActivity.File</td>
                             <td>@processedActivity.Percentage %</td>
                         </tr>
                     }
@@ -68,17 +116,17 @@
     [CascadingParameter]
     IModalService Modal { get; set; } = default!;
 
-    private List<(string Document, string FullName, string Title, int Percentage)> ProcessedActivities { get; set; } = new();
+    private List<(string Document, string FullName, string Title, string Description, String File, int Percentage)> ProcessedActivities { get; set; } = new();
     private List<User> YoungUsers { get; set; } = new();
     private List<ActivityColection> ActivitiesCollection { get; set; }
 
     private ActivityColection activiti = new();
     private User Users = new();
     private Activity activity = new();
+    private Activity activity2 = new();
     private Tutor tutor = new();
     private Young young = new();
-
-    private int selectedStudentId;
+    private string selectedStudentId;
     private int currentPage = 1;
     private int totalPages;
     private int loggedInTutorId;
@@ -112,7 +160,7 @@
                 loggedInTutorId = tutor.Id;
             }
         }        
-     
+
 
 
     }
@@ -158,7 +206,7 @@
             await Student(activiti.Youngid);
             await Activity(activiti.ActivitiesId);
 
-            ProcessedActivities.Add((Users.Document, Users.FullName, activity.Title, activity.Percentage));
+            ProcessedActivities.Add((Users.Document, Users.FullName, activity.Title, activity.Description, activity.FileTask, activity.Percentage));
         }
     }
 
@@ -178,11 +226,53 @@
 
     private void UploadActivity()
     {
-        // Lógica para cargar la actividad
+
     }
 
-    private void SendActivities()
+    private async Task SendActivities()
     {
-        // Lógica para enviar datos al servidor o procesar actividades
-    }
-}
+        if (selectedStudentId == "0" || string.IsNullOrEmpty(selectedStudentId))
+        {
+            var message = "You must choose a Student";
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;  // Detener el proceso si no se ha seleccionado un estudiante
+        }
+
+        try
+        {
+            // Realizar la solicitud solo si se ha seleccionado un estudiante
+            var responseHTTP3 = await repository.GetAsync<Young>($"api/Youngs/{selectedStudentId}");
+            young = responseHTTP3.Response;
+
+            var responseHttp = await repository.PostAsync<Activity, Activity>("/api/Activitys", activity2);
+            var createdActivity = responseHttp.Response;
+
+            activiti.ActivitiesId = createdActivity.Id;
+            activiti.Youngid = young.Id;
+            activiti.TutorsId = loggedInTutorId;
+
+            var responseHttp2 = await repository.PostAsync("/api/ActivityCollection", activiti);
+
+            if (responseHttp.Error)
+            {
+                var message = await responseHttp.GetErrorMessageAsync();
+                await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return;
+            }
+            else if (responseHttp2.Error)
+            {
+                var message = await responseHttp2.GetErrorMessageAsync();
+                await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return;
+            }
+
+            await sweetAlertService.FireAsync("Success", "Your activity has been successfully created.", SweetAlertIcon.Info);
+            navigationManager.NavigateTo("/AssignActivities", true);
+
+        }
+        catch (Exception ex)
+        {
+            // Manejar cualquier excepción que pueda ocurrir durante la ejecución
+            await sweetAlertService.FireAsync("Error", $"An error occurred: {ex.Message}", SweetAlertIcon.Error);
+        }
+    }}

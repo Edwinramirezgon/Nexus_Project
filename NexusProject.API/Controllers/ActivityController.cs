@@ -58,13 +58,13 @@ namespace NexusProject.API.Controllers
 
         //Method Create
         [HttpPost]
-        public async Task<ActionResult> PostAsync(Activity activity)
+        public async Task<ActionResult<Activity>> PostAsync(Activity activity)
         {
             _context.Add(activity);
-         
-                    await _context.SaveChangesAsync();
-                    return Ok(activity);
-               
+            await _context.SaveChangesAsync();
+
+      
+            return Ok(activity);
         }
 
         //Method Get by ID (Read)

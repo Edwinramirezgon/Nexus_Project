@@ -59,6 +59,7 @@ namespace NexusProject.Web.Repositories
             var responseHttp = await _httpClient.PostAsync(url, messageContet);
             if (responseHttp.IsSuccessStatusCode)
             {
+
                 var response = await UnserializeAnswer<TResponse>(responseHttp, _jsonDefaultOptions);
                 return new HttpResponseWrapper<TResponse>(response, false, responseHttp);
             }

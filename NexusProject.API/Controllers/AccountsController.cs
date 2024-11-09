@@ -290,18 +290,11 @@ namespace NexusProject.API.Controllers
             [HttpPost("CreateTutor")]
             public async Task<ActionResult> PostAsync(Tutor tutor)
             {
-                try
-                {
+             
                     _context.Add(tutor);
                 await _context.SaveChangesAsync();
                 return Ok(tutor);
-                }
-                catch (Exception ex)
-                {
-                    // Loggea el error para mayor detalle en los registros del servidor
-                    Console.WriteLine(ex.Message);
-                    return StatusCode(500, "Ocurrió un error en el servidor.");
-                }
+                
             }
 
 
