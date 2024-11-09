@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace NexusProject.Web.Repositories
 {
@@ -12,6 +13,7 @@ namespace NexusProject.Web.Repositories
         Task<HttpResponseWrapper<TResponse>> PutAsync<T, TResponse>(string url, T model);
         Task<HttpResponseWrapper<object>> Get(string url);
         Task<HttpResponseWrapper<TResponse>> Put<T, TResponse>(string url, T model);
+        Task<HttpResponseWrapper<string>> UploadFile(MultipartFormDataContent content, string url);
 
 
     }

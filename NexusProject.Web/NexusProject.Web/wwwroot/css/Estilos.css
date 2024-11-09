@@ -353,19 +353,7 @@ h4 {
     margin: 0;
 }
 
-.form-section {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 20px 0;
-}
 
-    .form-section input {
-        padding: 8px;
-        width: 100px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
 
     .form-section button {
         background-color: #5DACBD;

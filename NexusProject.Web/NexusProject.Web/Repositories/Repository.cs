@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -126,5 +128,17 @@ namespace NexusProject.Web.Repositories
             }
             return new HttpResponseWrapper<TResponse>(default, !responseHttp.IsSuccessStatusCode, responseHttp);
         }
+
+        public async Task<HttpResponseWrapper<string>> UploadFile(MultipartFormDataContent content, string url)
+        {
+            var response = await _httpClient.PostAsync(url, content);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                return new HttpResponseWrapper<string>(result["url"], false, response);
+            }
+            return new HttpResponseWrapper<string>(null, true, response);
+        }
     }
 }
+

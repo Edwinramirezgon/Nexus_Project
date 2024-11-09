@@ -14,61 +14,56 @@
         <DataAnnotationsValidator />
 
 
-        <div class="form-section">
-
-            
-
-                <select  @bind="@selectedStudentId">
+        <div class="form-section row">
+            <div class="col-md-3 mt-2">
+                <label for="studentSelect">Select a Student</label>
+                <select id="studentSelect" class="form-control" @bind="@selectedStudentId">
                     <option value="0">Select a Student</option>
                     @foreach (var user in YoungUsers)
                     {
                         <option value="@user.Document">@user.FullName</option>
                     }
                 </select>
-          
+            </div>
 
-            
-                    <div>
-                <label for="floatingInput3">Activity Name</label>
-
-                <InputText class="form-control col-1" id="floatingInput" placeholder="Activity Name" @bind-Value="@activity2.Title" />
+            <div class="col-md-4 mt-2">
+                <label for="activityTitle">Activity Name</label>
+                <InputText class="form-control" id="activityTitle" placeholder="Activity Name" @bind-Value="@activity2.Title" />
                 <ValidationMessage For="@(() => activity2.Title)" />
             </div>
-            <div>
-            <label for="floatingInput2">Activity %</label>
-            <InputNumber class="form-control col-1" id="floatingInput2" placeholder="Activity Percentage" @bind-Value="@activity2.Percentage" />
 
-            <ValidationMessage For="@(() => activity2.Percentage)" />
-
+            <div class="col-md-2 mt-2">
+                <label for="activityPercentage">Activity %</label>
+                <InputNumber class="form-control" id="activityPercentage" placeholder="Activity Percentage" @bind-Value="@activity2.Percentage" />
+                <ValidationMessage For="@(() => activity2.Percentage)" />
             </div>
 
-
-               
-
-            <div>
-                <label for="floatingInput4">Maximum Date</label>
-            <InputDate class="form-control" id="floatingInput4" placeholder="Activity Last Date To Send" @bind-Value="@activity2.DateandTime" />
-
-            <ValidationMessage For="@(() => activity2.DateandTime)" />
+            <div class="col-md-3 mt-2">
+                <label for="activityDate">Maximum Date</label>
+                <InputDate class="form-control" id="activityDate" placeholder="Activity Last Date To Send" @bind-Value="@activity2.DateandTime" />
+                <ValidationMessage For="@(() => activity2.DateandTime)" />
             </div>
-            <div>
-                <label for="floatingInput3">Activity Description</label>
 
-                <InputText class="form-control col-3" id="floatingInput3" placeholder="Activity Description&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;" @bind-Value="@activity2.Description" />
-
+            <div class="col-md-7 mt-2">
+                <label for="activityDescription">Activity Description</label>
+                <InputText class="form-control" id="activityDescription" placeholder="Activity Description" @bind-Value="@activity2.Description" style="height: 70px; padding: 10px;" />
                 <ValidationMessage For="@(() => activity2.Description)" />
             </div>
 
-            
-        <button @onclick="UploadActivity">Upload</button>
-               
-        <button @onclick="SendActivities">Send</button>
+            <div class="col-md-5 mt-5">
+                <label for="fileUpload">Activity File</label>
+                <InputFile id="fileUpload" OnChange="OnChange" accept=".pdf, .docx, .xlsx, .doc, .xls, .jpeg, .png, .jpg" />
+            </div>
 
-    
+            <div class="col-md-12 mt-3">
+                <button class="btn btn-primary" @onclick="SendActivities">Send</button>
+            </div>
         </div>
 </EditForm>
 
     <GenericList MyList="ActivitiesCollection">
+
+
         <Body>
             <table class="table">
                 <thead>
@@ -89,7 +84,18 @@
                             <td>@processedActivity.FullName</td>
                             <td>@processedActivity.Title</td>
                             <td>@processedActivity.Description</td>
-                            <td>@processedActivity.File</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(processedActivity.File))
+                                {
+                                    <a href="@processedActivity.File" target="_blank" class="btn btn-link">
+                                        Download File
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>No file uploaded</span>
+                                }
+                            </td>
                             <td>@processedActivity.Percentage %</td>
                         </tr>
                     }
@@ -131,6 +137,50 @@
     private int totalPages;
     private int loggedInTutorId;
 
+   
+
+    [Parameter] public string? FileURL { get; set; }
+
+    [Parameter] public EventCallback<string> FileSelected { get; set; }
+
+    private string? FileBase64;
+
+    private async Task OnChange(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            if (file != null)
+            {
+                // Crear el contenido multipart
+                var content = new MultipartFormDataContent();
+                var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10485760)); // 10MB max
+                content.Add(fileContent, "file", file.Name);
+
+                // Llamar al endpoint de carga de archivos
+                var response = await repository.UploadFile(content, "api/file/upload");
+
+                if (!response.Error)
+                {
+                    // Guardar la URL devuelta por el servidor
+                    activity2.FileTask = response.Response;
+                    FileURL = response.Response;
+                    await FileSelected.InvokeAsync(response.Response);
+                    StateHasChanged();
+                }
+                else
+                {
+                    var errorMessage = await response.GetErrorMessageAsync();
+                    await sweetAlertService.FireAsync("Error", errorMessage, SweetAlertIcon.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await sweetAlertService.FireAsync("Error", $"Error uploading file: {ex.Message}", SweetAlertIcon.Error);
+        }
+    }
+   
 
     [CascadingParameter]
 
@@ -166,6 +216,7 @@
     }
     protected async override Task OnInitializedAsync()
     {
+      
 
         await ParametersSetAsync();
         await LoadAsync();
@@ -224,10 +275,8 @@
         Users = responseHTTP2.Response;
     }
 
-    private void UploadActivity()
-    {
+  
 
-    }
 
     private async Task SendActivities()
     {
@@ -243,7 +292,7 @@
             // Realizar la solicitud solo si se ha seleccionado un estudiante
             var responseHTTP3 = await repository.GetAsync<Young>($"api/Youngs/{selectedStudentId}");
             young = responseHTTP3.Response;
-
+           
             var responseHttp = await repository.PostAsync<Activity, Activity>("/api/Activitys", activity2);
             var createdActivity = responseHttp.Response;
 

@@ -20,12 +20,17 @@ namespace NexusProject.API.Controllers
     {
 
         private readonly DataContext _context;
+        private readonly IFileStorage _fileStorage;
+        private readonly string _container;
 
         //Constructor
-        public ActivityController(DataContext context)
+        public ActivityController(DataContext context, IFileStorage fileStorage)
         {
             _context = context;
+            _fileStorage = fileStorage;
+
         }
+
 
         [HttpGet]
         public async Task<IActionResult> GetAsync([FromQuery] PaginationDTO pagination)
@@ -55,6 +60,9 @@ namespace NexusProject.API.Controllers
             double totalPages = Math.Ceiling(count / pagination.RecordsNumber);
             return Ok(totalPages);
         }
+
+
+        
 
         //Method Create
         [HttpPost]
