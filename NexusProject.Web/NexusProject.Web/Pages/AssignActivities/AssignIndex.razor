@@ -75,7 +75,7 @@
             <table class="custom-table">
                 <thead>
                     <tr>
-                        <th>Activity ID</th>
+                        <th>ACTIVITY ID</th>
                         <th>STUDENT DOCUMENT</th>
                         <th>STUDENT NAME</th>
                         <th>ACTIVITY NAME</th>
@@ -85,6 +85,8 @@
                         <th>PERCENTAGE</th>
                         <th>DELIVERED TASK</th>
                         <th>DELIVERED TIME</th>
+                        <th>REOPEN</th>
+
 
                     </tr>
                 </thead>
@@ -137,6 +139,23 @@
                                 }
                             </td>
 
+                            <td>
+
+                                @if (processedActivity.DateandTime < DateTime.Now)
+                                {
+
+                                <td><button class="btn btn-primary custom-file-button" @onclick="() => ShowModal(processedActivity.id)">ReOpen</button></td>
+                                }
+                                else if (processedActivity.File2 != null)
+                                {
+                                <td><button class="btn btn-primary custom-file-button" @onclick="() => ShowModal(processedActivity.id)">ReOpen</button></td>
+                                }
+                                else
+                                {
+                                    <span>THE TASK IS OPENED</span>
+                                }
+                            </td>
+
                         </tr>
                     }
                 </tbody>
@@ -162,8 +181,6 @@
     [CascadingParameter]
     IModalService Modal { get; set; } = default!;
 
-
-
     private List<(int id, string Document, string FullName, string Title, string Description, DateTime DateandTime, string File, int Percentage, string File2, DateTime SenDate )> ProcessedActivities { get; set; } = new();
     private List<User> YoungUsers { get; set; } = new();
     private List<ActivityColection> ActivitiesCollection { get; set; }
@@ -185,6 +202,17 @@
     [Parameter] public string? FileURL { get; set; }
 
     [Parameter] public EventCallback<string> FileSelected { get; set; }
+
+    private async Task ShowModal(int id)
+    {
+        IModalReference modalReference;
+        modalReference = Modal.Show<ReOpen>("REOPEN ACTIVITY", new ModalParameters().Add("ActivityId", id));
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+            await LoadAsync();
+        }
+    }
 
     private string? FileBase64;
 

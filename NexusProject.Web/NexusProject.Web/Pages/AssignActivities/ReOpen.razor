@@ -1,0 +1,119 @@
+﻿@page "/ReOpen/{ActivityId}"
+@attribute [Authorize(Roles = "Tutor")]
+@inject IRepository repository
+@inject SweetAlertService sweetAlertService
+@inject NavigationManager navigationManager
+@inject ILoginService loginService
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+<PageTitle>REOPEN ACTIVITY</PageTitle>
+
+<h4>REOPEN ACTIVITY</h4>
+
+<EditForm Model="activity">
+    <DataAnnotationsValidator />
+
+    <div class="card">
+        <div class="card-header">
+            <span>
+                REOPEN ACTIVITY           
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-6">
+
+                    <div class="form-floating mb-3">
+                        <InputText class="form-control" id="activityTitle" placeholder="Activity Name " @bind-Value="@activity.Title" />
+                        <label for="activityTitle">Activity Name :</label>
+                        <ValidationMessage For="@(() => activity.Title)" />
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <InputNumber class="form-control" id="activityPercentage" placeholder="Activity Percentage" @bind-Value="@activity.Percentage" />
+                        <label for="activityPercentage">Activity %</label>
+                        <ValidationMessage For="@(() => activity.Percentage)" />
+                    </div>
+                                    
+                </div>
+                <div class="col-6">
+                    <div class="form-floating mb-3">
+                        <InputDate class="form-control" id="activityDate" placeholder="Activity Last Date To Send" @bind-Value="@activity.DateandTime" />
+                        <label for="activityDate">Maximum Date</label>
+                        <ValidationMessage For="@(() => activity.DateandTime)" />
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <InputText class="form-control" id="activityDescription" placeholder="Activity Description" @bind-Value="@activity.Description" />
+                        <label for="activityDescription">Activity Description</label>
+                        <ValidationMessage For="@(() => activity.Description)" />
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+  
+    <span>
+    </span>
+</EditForm>
+<div class="d-flex justify-content-center mt-4">
+    <button class="btn btn-success custom-file-button" @onclick="() => SendActivities()">Send</button>
+</div>
+
+
+
+@code {
+    [Parameter]
+    public int ActivityId { get; set; }
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+    private Activity activity = new();    
+
+
+    protected async override Task OnInitializedAsync()
+    {     
+        await LoadAsync();
+    }
+
+
+
+    private async Task LoadAsync()
+    {
+        var responseHTTP = await repository.GetAsync<Activity>($"api/Activitys/{ActivityId}");
+        activity = responseHTTP.Response;
+        activity.DateandTime = DateTime.Now;
+    }
+
+
+
+    private async Task SendActivities()
+    {
+
+        try
+        {
+           
+          
+            activity.SendTask = null;
+            activity.SendTime = DateTime.MinValue;
+
+            var responseHttp2 = await repository.PutAsync<Activity, Activity>("/api/Activitys", activity);
+
+            if (responseHttp2.Error)
+            {
+                var message = await responseHttp2.GetErrorMessageAsync();
+                await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return;
+            }
+
+
+            await sweetAlertService.FireAsync("Success", "Your activity has been successfully REOPEN.", SweetAlertIcon.Info);
+            navigationManager.NavigateTo("/AssignActivities", true);
+
+        }
+        catch (Exception ex)
+        {
+
+            await sweetAlertService.FireAsync("Error", $"An error occurred: {ex.Message}", SweetAlertIcon.Error);
+        }
+    }
+}
