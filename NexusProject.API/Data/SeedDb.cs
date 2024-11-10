@@ -36,6 +36,7 @@ namespace NexusProject.API.Data
             await CheckTutorAsync();
             await CheckAdminAsync();
             await CheckActivityAsync();
+            await CheckFollowAsync();
             await CheckActivitycollectionAsync();
 
 
@@ -90,7 +91,7 @@ namespace NexusProject.API.Data
         {
             if (!_context.ActivityColections.Any())
             {
-                _context.ActivityColections.Add(new ActivityColection { Youngid = 1, TutorsId = 1, ActivitiesId = 1 });
+                _context.ActivityColections.Add(new ActivityColection { Youngid = 1, TutorsId = 1, ActivitiesId = 1, FollowsId= 1 });
             }
             await _context.SaveChangesAsync();
         }
@@ -102,6 +103,17 @@ namespace NexusProject.API.Data
             if (!_context.Activitys.Any())
             {
                 _context.Activitys.Add(new Activity { Title = "Math Derivate", Description = "Derivate", Percentage = 20});
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task CheckFollowAsync()
+
+
+        {
+            if (!_context.Follows.Any())
+            {
+                _context.Follows.Add(new Follow { punctuation = 5.0, Remarks = "Excelent" });
             }
             await _context.SaveChangesAsync();
         }

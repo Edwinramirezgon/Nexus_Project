@@ -28,5 +28,10 @@ namespace NexusProject.Shared.Entities
         [JsonIgnore]
         public Activity Activities { get; set; }
         public int ActivitiesId { get; set; }
+
+        [ForeignKey("FollowsId")]
+        [JsonIgnore]
+        public Follow Follows { get; set; }
+        public int FollowsId { get; set; }
     }
 }

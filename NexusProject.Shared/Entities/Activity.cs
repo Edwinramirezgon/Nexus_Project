@@ -32,9 +32,7 @@ namespace NexusProject.Shared.Entities
 
 
 
-
-        [JsonIgnore]
-        public ICollection<ActivityColection> ActivityColections { get; set; }
+      
     }
 }
 

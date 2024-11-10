@@ -26,7 +26,6 @@ public class Young
         public string UserDocument { get; set; }
         public User? Users { get; set; }
 
-        [JsonIgnore]
-        public ICollection<FollowCollection> FollowCollections { get; set; }
+       
     }
 }

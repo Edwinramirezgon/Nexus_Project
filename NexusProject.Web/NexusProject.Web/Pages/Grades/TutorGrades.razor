@@ -1,4 +1,4 @@
-﻿@page "/AssignActivities"
+﻿@page "/EvaluationAndMonitoring"
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
@@ -6,10 +6,10 @@
 @attribute [Authorize(Roles = "Admin, Tutor")]
 <PageTitle>Assign Activities</PageTitle>
 
-<h4>ASSIGN ACTIVITIES</h4>
+<h4>ASSIGN GRADES TO YOUR STUDENTS</h4>
 
 <div class="container">
-<EditForm Model="activiti" >
+    <EditForm Model="activiti">
 
         <DataAnnotationsValidator />
 
@@ -46,7 +46,7 @@
 
             <div class="col-md-6 mt-2">
                 <label for="activityDescription">Activity Description</label>
-                <InputText class="form-control" id="activityDescription" placeholder="Activity Description" @bind-Value="@activity2.Description"  />
+                <InputText class="form-control" id="activityDescription" placeholder="Activity Description" @bind-Value="@activity2.Description" />
                 <ValidationMessage For="@(() => activity2.Description)" />
             </div>
 
@@ -61,7 +61,7 @@
                 <button class="btn btn-primary custom-file-button" @onclick="SendActivities">Assign Activitie </button>
             </div>
         </div>
-</EditForm>
+    </EditForm>
 
     <GenericList MyList="ActivitiesCollection">
 
@@ -83,7 +83,7 @@
                         <th>ACTIVITY DUE DATE</th>
                         <th>ACTIVITY FILE</th>
                         <th>PERCENTAGE</th>
-                        <th>DELIVERED TASK</th>
+                        <th>RECEIVED FILE</th>
                         <th>DELIVERED TIME</th>
 
                     </tr>
@@ -124,18 +124,7 @@
                                     <span>No file uploaded</span>
                                 }
                             </td>
-
-
-                            <td>
-                                @if (@processedActivity.SenDate.ToString("yyyy-MM-dd--HH--mm").Equals("0001-01-01--00--00"))
-                                {
-                                    <span>Not Delivered</span>
-                                }
-                                else
-                                {
-                                    @processedActivity.SenDate.ToString("yyyy-MM-dd--HH--mm")
-                                }
-                            </td>
+                            <td>@processedActivity.SenDate.ToString("yyyy-MM-dd--HH--mm")</td>
 
                         </tr>
                     }
@@ -164,7 +153,7 @@
 
 
 
-    private List<(int id, string Document, string FullName, string Title, string Description, DateTime DateandTime, string File, int Percentage, string File2, DateTime SenDate )> ProcessedActivities { get; set; } = new();
+    private List<(int id, string Document, string FullName, string Title, string Description, DateTime DateandTime, string File, int Percentage, string File2, DateTime SenDate)> ProcessedActivities { get; set; } = new();
     private List<User> YoungUsers { get; set; } = new();
     private List<ActivityColection> ActivitiesCollection { get; set; }
 
@@ -172,7 +161,6 @@
     private User Users = new();
     private Activity activity = new();
     private Activity activity2 = new();
-    private Follow follow = new();
     private Tutor tutor = new();
     private Young young = new();
     private string selectedStudentId;
@@ -229,7 +217,7 @@
 
     private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
 
-    private async  Task ParametersSetAsync()
+    private async Task ParametersSetAsync()
 
     {
 
@@ -252,7 +240,7 @@
             {
                 loggedInTutorId = tutor.Id;
             }
-        }        
+        }
 
 
 
@@ -339,15 +327,10 @@
 
             var responseHttp = await repository.PostAsync<Activity, Activity>("/api/Activitys", activity2);
             var createdActivity = responseHttp.Response;
-            follow.Remarks = "GRADE NOT ASSIGNED";
-            follow.punctuation = 0;
-            var responseHttp3 = await repository.PostAsync<Follow, Follow>("/api/Follows", follow);
-            var createdFollow = responseHttp3.Response;
 
             activiti.ActivitiesId = createdActivity.Id;
             activiti.Youngid = young.Id;
             activiti.TutorsId = loggedInTutorId;
-            activiti.FollowsId = createdFollow.Id;
 
             var responseHttp2 = await repository.PostAsync("/api/ActivityCollection", activiti);
 

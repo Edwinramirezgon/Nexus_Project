@@ -18,7 +18,7 @@ namespace NexusProject.API.Data
         public DbSet<Activity> Activitys { get; set; }
         public DbSet<ActivityColection> ActivityColections { get; set; }
         public DbSet<Follow> Follows { get; set; }
-        public DbSet<FollowCollection> FollowCollections { get; set; }
+
         public DbSet<foundation> foundations { get; set; }
         public DbSet<Message> Messages { get; set; }
 

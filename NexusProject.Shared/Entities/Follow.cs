@@ -12,17 +12,14 @@ namespace NexusProject.Shared.Entities
     {
 
         public int Id { get; set; }
+                 
+        public double punctuation { get; set; }
 
-        [Required(ErrorMessage = "The field {0} is mandatory")]      
-        public int punctuation { get; set; }
-
-
-        [Required(ErrorMessage = "The field {0} is mandatory")]
+             
         [MaxLength(200, ErrorMessage = "More than 200 charachters are not allowed")]
         public string Remarks { get; set; }
 
 
-        [JsonIgnore]
-        public ICollection<FollowCollection> FollowCollections { get; set; }
+        
     }
 }

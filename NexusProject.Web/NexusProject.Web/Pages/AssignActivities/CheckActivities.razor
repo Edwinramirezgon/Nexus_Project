@@ -15,7 +15,7 @@
 
 
         <Body>
-            <table class="table">
+            <table class="custom-table">
                 <thead>
                     <tr>
                         <th>ACTIVITY ID</th>
@@ -46,13 +46,52 @@
                                 {
                                     <span>@processedActivity.Title</span>
                                 }
-                            </td>                           
+                            </td>
                             <td>@processedActivity.Description</td>
                             <td>@processedActivity.DateandTime.ToString("yyyy-MM-dd")</td>
                             <td>@processedActivity.Percentage %</td>
-                            <td> <InputFile id="fileUpload" OnChange="OnChange" accept=".pdf, .docx, .xlsx, .doc, .xls, .jpeg, .png, .jpg" /></td>
-                            <td> <button class="btn btn-primary" @onclick="() => SendActivities(processedActivity.ID)">Send</button></td>
 
+                            <td>
+
+                                @if (processedActivity.DateandTime < DateTime.Now)
+                                {
+                                    <button class="btn btn-secondary custom-file-button" disabled>Expired</button>
+                                }
+                                else if (processedActivity.SendTask != null)
+                                {
+                                    <button class="btn btn-secondary custom-file-button" disabled>Completed</button>
+                                }
+                                else
+                                {
+                                    <label for="fileUpload" class="btn btn-primary custom-file-button">
+                                      Upload File
+                                    </label>
+                                    <InputFile id="fileUpload" OnChange="OnChange" class="d-none" accept=".pdf, .docx, .xlsx, .doc, .xls, .jpeg, .png, .jpg" />
+                                }
+                            </td>
+
+
+                         
+                                
+                           
+
+
+
+                            <td>
+                           
+                                @if (processedActivity.DateandTime < DateTime.Now)
+                                {
+                                    <button class="btn btn-secondary custom-file-button" disabled>Expired</button>
+                                }
+                                else if (processedActivity.SendTask != null)
+                                {
+                                    <button class="btn btn-secondary custom-file-button" disabled>Completed</button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-primary custom-file-button" @onclick="() => SendActivities(processedActivity.ID)">Send</button>
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -78,7 +117,7 @@
     [CascadingParameter]
     IModalService Modal { get; set; } = default!;
 
-    private List<(int ID, string FullName, string Title, string Description, DateTime DateandTime, string File, int Percentage)> ProcessedActivities { get; set; } = new();
+    private List<(int ID, string FullName, string Title, string Description, DateTime DateandTime, string File, string SendTask, int Percentage)> ProcessedActivities { get; set; } = new();
     private List<User> YoungUsers { get; set; } = new();
     private List<ActivityColection> ActivitiesCollection { get; set; }
 
@@ -212,10 +251,10 @@
 
         foreach (var activiti in ActivitiesCollection)
         {
-            await Student(activiti.Youngid);
+            await Tutor(activiti.TutorsId);
             await Activity(activiti.ActivitiesId);
 
-            ProcessedActivities.Add((activity.Id, Users.FullName, activity.Title, activity.Description, activity.DateandTime, activity.FileTask, activity.Percentage));
+            ProcessedActivities.Add((activity.Id, Users.FullName, activity.Title, activity.Description, activity.DateandTime, activity.FileTask, activity.SendTask, activity.Percentage));
 
         }
     }
@@ -226,11 +265,11 @@
         activity = responseHTTP.Response;
     }
 
-    private async Task Student(int id)
+    private async Task Tutor(int id)
     {
-        var responseHTTP = await repository.GetAsync<Young>($"api/Youngs/id/{id}");
-        young = responseHTTP.Response;
-        var responseHTTP2 = await repository.GetAsync<User>($"api/Users/{young.UserDocument}");
+        var responseHTTP = await repository.GetAsync<Tutor>($"api/Tutors/id/{id}");
+        tutor = responseHTTP.Response;
+        var responseHTTP2 = await repository.GetAsync<User>($"api/Users/{tutor.UserDocument}");
         Users = responseHTTP2.Response;
     }
 
