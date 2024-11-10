@@ -1,0 +1,26 @@
+﻿@inject IChatService ChatService
+
+<div class="contact-list">
+    @foreach (var contact in Contacts)
+    {
+        <div class="contact-item" @onclick="() => OnContactSelected(contact)">
+            <p class="contact-name">@contact.FullName</p>
+        </div>
+    }
+</div>
+
+@code {
+    private List<User> Contacts = new List<User>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Contacts = await ChatService.GetContactsAsync();
+    }
+
+    [Parameter] public EventCallback<User> ContactSelected { get; set; }
+
+    private void OnContactSelected(User contact)
+    {
+        ContactSelected.InvokeAsync(contact);
+    }
+}

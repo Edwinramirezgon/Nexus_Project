@@ -31,6 +31,8 @@ namespace NexusProject.API.Controllers
                 _context = context;
             }
 
+
+
             [HttpGet]
             public async Task<IActionResult> GetAsync([FromQuery] PaginationDTO pagination)
             {

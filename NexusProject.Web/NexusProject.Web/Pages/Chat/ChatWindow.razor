@@ -1,0 +1,43 @@
+﻿@inject IChatService ChatService
+
+<div class="chat-window">
+    <div class="messages">
+        @foreach (var message in Messages)
+        {
+            <div class="message @(message.SenderId == CurrentUserId ? "user-message" : "contact-message")">
+                <p>@message.content</p>
+                <span class="timestamp">@message.DateandTime.ToString("g")</span>
+            </div>
+        }
+    </div>
+
+    <div class="message-input">
+        <input type="text" @bind="NewMessageContent" placeholder="Escribe tu mensaje..." />
+        <button @onclick="SendMessage">Enviar</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public User Contact { get; set; }
+    [Parameter] public List<Message> Messages { get; set; } = new List<Message>();
+    private string NewMessageContent { get; set; }
+    private string CurrentUserId = ""; // Aquí deberías colocar el ID del usuario actual.
+
+    private async Task SendMessage()
+    {
+        if (!string.IsNullOrWhiteSpace(NewMessageContent))
+        {
+            var message = new Message
+                {
+                    content = NewMessageContent,
+                    SenderId = CurrentUserId,
+                    ReceiverId = Contact.Id,
+                    DateandTime = DateTime.UtcNow
+                };
+
+            await ChatService.SendMessageAsync(message);
+            Messages.Add(message);
+            NewMessageContent = string.Empty;
+        }
+    }
+}

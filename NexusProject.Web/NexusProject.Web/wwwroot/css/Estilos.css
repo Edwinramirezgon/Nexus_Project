@@ -476,3 +476,40 @@ h4 {
     padding: 0;
     max-width: 100%;
 }
+
+.contact-list {
+    width: 200px;
+    float: left;
+    border-right: 1px solid #ccc;
+}
+
+.contact-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.chat-window {
+    margin-left: 210px;
+    padding: 20px;
+}
+
+.message {
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.user-message {
+    background-color: #d1e7dd;
+    text-align: right;
+}
+
+.contact-message {
+    background-color: #f8d7da;
+    text-align: left;
+}
+
+.timestamp {
+    font-size: 0.8em;
+    color: gray;
+}
