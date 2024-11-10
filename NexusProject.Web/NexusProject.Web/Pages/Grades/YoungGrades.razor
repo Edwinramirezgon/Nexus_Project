@@ -1,9 +1,9 @@
-﻿@page "/EvaluationAndMonitoring"
+﻿@page "/Grades"
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
 @inject AuthenticationStateProvider authenticationStateProvider
-@attribute [Authorize(Roles = "Tutor")]
+@attribute [Authorize(Roles = "Young")]
 
 
 <style>
@@ -29,9 +29,8 @@
             <table class="custom-table">
                 <thead>
                     <tr>
-                        <th>ACTIVITY ID</th>
-                        <th>STUDENT DOCUMENT</th>
-                        <th>STUDENT NAME</th>
+                        <th>ACTIVITY ID</th>                    
+                        <th>TUTOR NAME</th>
                         <th>ACTIVITY NAME</th>
                         <th>ACTIVITY DESCRIPTION</th>
                         <th>ACTIVITY DUE DATE</th>
@@ -39,16 +38,14 @@
                         <th class="grade-column">GRADE</th>
                         <th>REMARKS</th>
                         <th>DELIVERED TASK</th>
-                        <th>DELIVERED TIME</th>
-                        <th>SAVE</th>
+                        <th>DELIVERED TIME</th>                      
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var processedActivity in ProcessedActivities)
                     {
                         <tr>
-                            <td>@processedActivity.activityId</td>
-                            <td>@processedActivity.Document</td>
+                            <td>@processedActivity.activityId</td>               
                             <td>@processedActivity.FullName</td>
                             <td>
                                 @if (!string.IsNullOrEmpty(processedActivity.File))
@@ -65,17 +62,8 @@
                             <td>@processedActivity.Description</td>
                             <td>@processedActivity.Duedate.ToString("yyyy-MM-dd")</td>
                             <td>@processedActivity.Percentage %</td>
-                            <td class="grade-column">
-                                <input type="number"
-                                       class="grade-input"
-                                       @bind="processedActivity.Grade"
-                                       @bind:event="oninput">
-                            </td>
-                            <td>
-                                <input type="text"
-                                       @bind="processedActivity.Remarks"
-                                       @bind:event="oninput">
-                            </td>
+                            <td class="grade-column">@processedActivity.Grade</td>
+                            <td>@processedActivity.Remarks</td>
                             <td>
                                 @if (processedActivity.SendTask == null)
                                 {
@@ -97,12 +85,6 @@
                                 {
                                     @processedActivity.SendDate.ToString("yyyy-MM-dd--HH--mm")
                                 }
-                            </td>
-                            <td>
-                                <button class="btn btn-primary custom-file-button"
-                                        @onclick="() => SendGrade(processedActivity.Followid, processedActivity.Grade, processedActivity.Remarks)">
-                                    Send
-                                </button>
                             </td>
                         </tr>
                     }
@@ -135,14 +117,13 @@
     private Tutor tutor = new();
     private Young young = new();
     private Follow follow = new();
-    private Follow follow2 = new();
-    private string selectedStudentId;
+    private string selectedTutorId;
     private string Sendtask;
     private int currentPage = 1;
     private int totalPages;
-    private int loggedInTutorId;
+    private int loggedInYoungId;
 
-    
+
     private class ActivityData
     {
         public int activityId { get; set; }
@@ -176,12 +157,12 @@
         if (UserId is not null)
         {
             var Id = UserId.Value;
-            var responseHTTP = await repository.GetAsync<Tutor>($"api/Tutors/{Id}");
-            tutor = responseHTTP.Response;
+            var responseHTTP = await repository.GetAsync<Young>($"api/Youngs/{Id}");
+            young = responseHTTP.Response;
 
             if (responseHTTP.Response != null)
             {
-                loggedInTutorId = tutor.Id;
+               loggedInYoungId = young.Id;
             }
         }
     }
@@ -194,12 +175,12 @@
         }
 
         string url1 = string.IsNullOrEmpty(Filter)
-            ? $"api/ActivityCollection?page={page}&tutorId={loggedInTutorId}"
-            : $"api/ActivityCollection?page={page}&filter={Filter}&tutorId={loggedInTutorId}";
+            ? $"api/ActivityCollection2?page={page}&Youngid={loggedInYoungId}"
+            : $"api/ActivityCollection2?page={page}&filter={Filter}&Youngid={loggedInYoungId}";
 
         string url2 = string.IsNullOrEmpty(Filter)
-            ? $"api/ActivityCollection/totalPages?tutorId={loggedInTutorId}"
-            : $"api/ActivityCollection/totalPages?filter={Filter}&tutorId={loggedInTutorId}";
+            ? $"api/ActivityCollection2/totalPages?Youngid={loggedInYoungId}"
+            : $"api/ActivityCollection2/totalPages?filter={Filter}&Youngid={loggedInYoungId}";
 
         var responseActivities = await repository.GetAsync<List<ActivityColection>>(url1);
         var responseTotalPages = await repository.GetAsync<int>(url2);
@@ -211,7 +192,7 @@
 
         foreach (var activitycollection in ActivitiesCollection)
         {
-            await Search(activitycollection.Youngid, activitycollection.ActivitiesId, activitycollection.FollowsId);
+            await Search(activitycollection.TutorsId, activitycollection.ActivitiesId, activitycollection.FollowsId);
             ProcessedActivities.Add(new ActivityData
                 {
                     activityId = activity.Id,
@@ -231,11 +212,11 @@
         }
     }
 
-    private async Task Search(int youngid, int activityid, int followid)
+    private async Task Search(int tutorid, int activityid, int followid)
     {
-        var responseHTTP = await repository.GetAsync<Young>($"api/Youngs/id/{youngid}");
-        young = responseHTTP.Response;
-        var responseHTTP2 = await repository.GetAsync<User>($"api/Users/{young.UserDocument}");
+        var responseHTTP = await repository.GetAsync<Tutor>($"api/Tutors/id/{tutorid}");
+        tutor = responseHTTP.Response;
+        var responseHTTP2 = await repository.GetAsync<User>($"api/Users/{tutor.UserDocument}");
         Users = responseHTTP2.Response;
         var responseHTTP3 = await repository.GetAsync<Activity>($"api/Activitys/{activityid}");
         activity = responseHTTP3.Response;
@@ -243,33 +224,6 @@
         follow = responseHTTP4.Response;
     }
 
-    private async Task SendGrade(int id, double grade, string remark)
-    {
-        try
-        {
-            var responseHTTP = await repository.GetAsync<Follow>($"api/Follows/{id}");
-            follow2 = responseHTTP.Response;
-            follow2.Id = id;
-            follow2.punctuation = grade;
-            follow2.Remarks = remark;
-
-            var responseHttp2 = await repository.PutAsync<Follow, Follow>("/api/Follows", follow2);
-
-            if (responseHttp2.Error)
-            {
-                var message = await responseHttp2.GetErrorMessageAsync();
-                await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
-                return;
-            }
-
-            await sweetAlertService.FireAsync("Success", "Your Grade has been successfully Sended.", SweetAlertIcon.Info);
-            navigationManager.NavigateTo("/EvaluationAndMonitoring", true);
-        }
-        catch (Exception ex)
-        {
-            await sweetAlertService.FireAsync("Error", $"An error occurred: {ex.Message}", SweetAlertIcon.Error);
-        }
-    }
 
     private async Task SelectedPage(int page)
     {

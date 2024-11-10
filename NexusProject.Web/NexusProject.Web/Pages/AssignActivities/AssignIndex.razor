@@ -3,19 +3,19 @@
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
 @inject AuthenticationStateProvider authenticationStateProvider
-@attribute [Authorize(Roles = "Admin, Tutor")]
+@attribute [Authorize(Roles = "Tutor")]
 <PageTitle>Assign Activities</PageTitle>
 
 <h4>ASSIGN ACTIVITIES</h4>
 
-<div class="container">
-<EditForm Model="activiti" >
+<div class="containergrade">
+<EditForm Model="activitycollection" >
 
         <DataAnnotationsValidator />
 
 
         <div class="form-section row">
-            <div class="col-md-3 mt-2">
+            <div class="col-md-2 mt-2">
                 <label for="studentSelect">Select a Student</label>
                 <select id="studentSelect" class="form-control" @bind="@selectedStudentId">
                     <option value="0">Select a Student</option>
@@ -26,39 +26,39 @@
                 </select>
             </div>
 
-            <div class="col-md-4 mt-2">
+            <div class="col-md-2 mt-2">
                 <label for="activityTitle">Activity Name</label>
                 <InputText class="form-control" id="activityTitle" placeholder="Activity Name" @bind-Value="@activity2.Title" />
                 <ValidationMessage For="@(() => activity2.Title)" />
             </div>
 
-            <div class="col-md-2 mt-2">
+            <div class="col-md-1 mt-2">
                 <label for="activityPercentage">Activity %</label>
                 <InputNumber class="form-control" id="activityPercentage" placeholder="Activity Percentage" @bind-Value="@activity2.Percentage" />
                 <ValidationMessage For="@(() => activity2.Percentage)" />
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-2 mt-2">
                 <label for="activityDate">Maximum Date</label>
                 <InputDate class="form-control" id="activityDate" placeholder="Activity Last Date To Send" @bind-Value="@activity2.DateandTime" />
                 <ValidationMessage For="@(() => activity2.DateandTime)" />
             </div>
 
-            <div class="col-md-6 mt-2">
+            <div class="col-md-2 mt-2">
                 <label for="activityDescription">Activity Description</label>
                 <InputText class="form-control" id="activityDescription" placeholder="Activity Description" @bind-Value="@activity2.Description"  />
                 <ValidationMessage For="@(() => activity2.Description)" />
             </div>
 
-            <div class="col-md-3 mt-4">
+            <div class="col-md-1 mt-4">
                 <label for="fileUpload" class="btn btn-primary custom-file-button">
                     Upload File
                 </label>
                 <InputFile id="fileUpload" OnChange="OnChange" class="d-none" accept=".pdf, .docx, .xlsx, .doc, .xls, .jpeg, .png, .jpg" />
             </div>
 
-            <div class="col-md-3 mt-4">
-                <button class="btn btn-primary custom-file-button" @onclick="SendActivities">Assign Activitie </button>
+            <div class="col-md-2 mt-4 ">
+                <button class="btn btn-primary custom-file-button" @onclick="SendActivities">Assign Activity</button>
             </div>
         </div>
 </EditForm>
@@ -168,7 +168,7 @@
     private List<User> YoungUsers { get; set; } = new();
     private List<ActivityColection> ActivitiesCollection { get; set; }
 
-    private ActivityColection activiti = new();
+    private ActivityColection activitycollection = new();
     private User Users = new();
     private Activity activity = new();
     private Activity activity2 = new();
@@ -197,15 +197,15 @@
             {
                 // Crear el contenido multipart
                 var content = new MultipartFormDataContent();
-                var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10485760)); // 10MB max
+                var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10485760)); 
                 content.Add(fileContent, "file", file.Name);
 
-                // Llamar al endpoint de carga de archivos
+           
                 var response = await repository.UploadFile(content, "api/file/upload");
 
                 if (!response.Error)
                 {
-                    // Guardar la URL devuelta por el servidor
+                  
                     activity2.FileTask = response.Response;
                     FileURL = response.Response;
                     await FileSelected.InvokeAsync(response.Response);
@@ -295,10 +295,10 @@
         YoungUsers = responseUsers.Response!.Where(u => u.UserType.ToString() == "Young").ToList();
         ProcessedActivities.Clear();
 
-        foreach (var activiti in ActivitiesCollection)
+        foreach (var activitycollection in ActivitiesCollection)
         {
-            await Student(activiti.Youngid);
-            await Activity(activiti.ActivitiesId);
+            await Student(activitycollection.Youngid);
+            await Activity(activitycollection.ActivitiesId);
 
             ProcessedActivities.Add((activity.Id, Users.Document, Users.FullName, activity.Title, activity.Description, activity.DateandTime, activity.FileTask, activity.Percentage,
             activity.SendTask, activity.SendTime));
@@ -328,12 +328,12 @@
         {
             var message = "You must choose a Student";
             await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
-            return;  // Detener el proceso si no se ha seleccionado un estudiante
+            return; 
         }
 
         try
         {
-            // Realizar la solicitud solo si se ha seleccionado un estudiante
+
             var responseHTTP3 = await repository.GetAsync<Young>($"api/Youngs/{selectedStudentId}");
             young = responseHTTP3.Response;
 
@@ -344,12 +344,12 @@
             var responseHttp3 = await repository.PostAsync<Follow, Follow>("/api/Follows", follow);
             var createdFollow = responseHttp3.Response;
 
-            activiti.ActivitiesId = createdActivity.Id;
-            activiti.Youngid = young.Id;
-            activiti.TutorsId = loggedInTutorId;
-            activiti.FollowsId = createdFollow.Id;
+            activitycollection.ActivitiesId = createdActivity.Id;
+            activitycollection.Youngid = young.Id;
+            activitycollection.TutorsId = loggedInTutorId;
+            activitycollection.FollowsId = createdFollow.Id;
 
-            var responseHttp2 = await repository.PostAsync("/api/ActivityCollection", activiti);
+            var responseHttp2 = await repository.PostAsync("/api/ActivityCollection", activitycollection);
 
             if (responseHttp.Error)
             {
@@ -370,7 +370,7 @@
         }
         catch (Exception ex)
         {
-            // Manejar cualquier excepción que pueda ocurrir durante la ejecución
+        
             await sweetAlertService.FireAsync("Error", $"An error occurred: {ex.Message}", SweetAlertIcon.Error);
         }
     }

@@ -421,6 +421,7 @@ h4 {
     border-collapse: collapse; /* Colapsa los bordes para que no se dupliquen */
     font-family: Arial, sans-serif;
     border: 1px solid #ccc; /* Borde exterior de la tabla */
+    margin-left: 0;
 }
 
     .custom-table thead {
@@ -429,7 +430,7 @@ h4 {
 
     .custom-table th, .custom-table td {
         padding: 12px;
-        text-align: left;
+        text-align: center;
         border: 1px solid #ccc; /* Línea divisoria entre celdas */
     }
 
@@ -458,3 +459,20 @@ h4 {
         .custom-table button:hover {
             background-color: #3a91a3;
         }
+
+
+.grade-input {
+    width: 70px;
+    text-align: center;
+}
+
+.grade-column {
+    width: 90px;
+    text-align: center;
+}
+
+.containergrade {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+}

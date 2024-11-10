@@ -3,12 +3,12 @@
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
 @inject AuthenticationStateProvider authenticationStateProvider
-@attribute [Authorize(Roles = "Admin, Young")]
+@attribute [Authorize(Roles = "Young")]
 <PageTitle>Assign Activities</PageTitle>
 
 <h4>CHECK YOUR ACTIVITIES</h4>
 
-<div class="container">
+<div class="containergrade">
     
 
     <GenericList MyList="ActivitiesCollection">
@@ -121,7 +121,7 @@
     private List<User> YoungUsers { get; set; } = new();
     private List<ActivityColection> ActivitiesCollection { get; set; }
 
-    private ActivityColection activiti = new();
+    private ActivityColection activitycollection = new();
     private User Users = new();
     private Activity activity = new();
     private Activity activity2 = new();
@@ -148,12 +148,12 @@
             var file = e.File;
             if (file != null)
             {
-                // Crear el contenido multipart
+           
                 var content = new MultipartFormDataContent();
-                var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10485760)); // 10MB max
+                var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10485760)); 
                 content.Add(fileContent, "file", file.Name);
 
-                // Llamar al endpoint de carga de archivos
+            
                 var response = await repository.UploadFile(content, "api/file/upload");
 
                 if (!response.Error)
@@ -249,10 +249,10 @@
         totalPages = responseTotalPages.Response!;    
         ProcessedActivities.Clear();
 
-        foreach (var activiti in ActivitiesCollection)
+        foreach (var activitycollection in ActivitiesCollection)
         {
-            await Tutor(activiti.TutorsId);
-            await Activity(activiti.ActivitiesId);
+            await Tutor(activitycollection.TutorsId);
+            await Activity(activitycollection.ActivitiesId);
 
             ProcessedActivities.Add((activity.Id, Users.FullName, activity.Title, activity.Description, activity.DateandTime, activity.FileTask, activity.SendTask, activity.Percentage));
 
