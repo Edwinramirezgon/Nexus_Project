@@ -81,7 +81,7 @@
                 ChatId = Guid.NewGuid().ToString(),
                 User1Id = sortedIds[0],
                 User2Id = sortedIds[1],
-                LastMessageTime = DateTime.UtcNow
+                LastMessageTime = DateTime.Now
             };
         var responseHttp = await repository.PostAsync<Chat>("/api/Chats", newChat);        
         return newChat;

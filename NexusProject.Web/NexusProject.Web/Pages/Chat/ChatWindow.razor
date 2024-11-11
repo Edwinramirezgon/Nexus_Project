@@ -79,12 +79,12 @@
                     SenderId = CurrentUserId,
                     ReceiverId = Contact.Document,
                     Content = NewMessageContent,
-                    DateandTime = DateTime.UtcNow
+                    DateandTime = DateTime.Now
                 };
 
             await SendMessageAsync(message);
             Messages.Add(message);
-            var responseHttp = await repository.PostAsync<Message>("/api/Messages", message);
+            var responseHttp = await repository.PostAsync<Message>("/api/Messages", message);        
             StateHasChanged();
         }
     }
@@ -102,6 +102,7 @@
             chat.MessageHistory.Add(message.Content);
             chat.LastMessage = message.Content;
             chat.LastMessageTime = message.DateandTime;
+            NewMessageContent = string.Empty;
 
             await Task.CompletedTask;
         }
