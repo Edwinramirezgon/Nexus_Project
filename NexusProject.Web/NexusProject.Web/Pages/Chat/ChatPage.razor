@@ -1,6 +1,7 @@
 ﻿@page "/chat"
 @inject IRepository repository
 @using Microsoft.Extensions.Configuration
+@using System.Threading
 @inject IConfiguration Configuration
 @inject AuthenticationStateProvider authenticationStateProvider
 @attribute [Authorize(Roles = "Tutor, Young, Admin")]
@@ -11,7 +12,8 @@
     {
         <ChatWindow Contact="SelectedContact"
                     Messages="messages"
-                    CurrentChat="currentChat" />
+                    CurrentChat="currentChat"
+                  />
     }
     else
     {
@@ -26,14 +28,35 @@
     private List<Message> messages = new List<Message>();
     private Chat currentChat;
     private string CurrentUserId;
-    private  List<Chat> _chats = new List<Chat>();
-    private  List<Message> _messages = new List<Message>();
-
+    private List<Chat> _chats = new List<Chat>();
+    private Timer _timer;
+    private DateTime? LastMessageTime; // Guarda el tiempo del último mensaje recibido
 
     protected async override Task OnInitializedAsync()
-    {     
+    {
         await ParametersSetAsync();
-       
+        StartPolling();
+    }
+
+    private DateTime? lastMessageDate;
+
+    private void StartPolling()
+    {
+        _timer = new Timer(async _ =>
+        {
+            if (SelectedContact != null)
+            {
+                var newMessages = await GetConversationAsync(currentChat.ChatId, lastMessageDate);
+
+                if (newMessages.Any())
+                {
+                
+                    messages.AddRange(newMessages);
+                    lastMessageDate = newMessages.Last().DateandTime;
+                    InvokeAsync(StateHasChanged);
+                }
+            }
+        }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(500));
     }
 
     [CascadingParameter]
@@ -42,23 +65,28 @@
     private async Task ParametersSetAsync()
     {
         var authenticationState = await authenticationStateTask;
-
         var UserId = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Document");
 
         if (UserId is not null)
-
         {
             CurrentUserId = UserId.Value;
-            
         }
-
     }
 
     private async Task OnContactSelected(User contact)
     {
         SelectedContact = contact;
         currentChat = await GetOrCreateChatAsync(CurrentUserId, contact.Document);
+
+        // Cargar todos los mensajes la primera vez que se selecciona el contacto
         messages = await GetConversationAsync(currentChat.ChatId);
+
+        // Registrar la fecha del último mensaje
+        if (messages.Any())
+        {
+            lastMessageDate = messages.Last().DateandTime;
+        }
+
         StateHasChanged();
     }
 
@@ -68,32 +96,49 @@
         _chats = responseHppt.Response!;
         var sortedIds = new[] { user1Id, user2Id }.OrderBy(id => id).ToList();
 
-     
         var existingChat = _chats.FirstOrDefault(c =>
             (c.User1Id == sortedIds[0] && c.User2Id == sortedIds[1]));
 
         if (existingChat != null)
             return existingChat;
 
-
         var newChat = new Chat
             {
                 ChatId = Guid.NewGuid().ToString(),
                 User1Id = sortedIds[0],
-                User2Id = sortedIds[1],
-                LastMessageTime = DateTime.Now
+                User2Id = sortedIds[1],             
             };
-        var responseHttp = await repository.PostAsync<Chat>("/api/Chats", newChat);        
+
+        var responseHttp = await repository.PostAsync<Chat>("/api/Chats", newChat);
         return newChat;
     }
 
-    public async Task<List<Message>> GetConversationAsync(string chatId)
+    private async Task FetchNewMessagesAsync()
     {
-        var responseHppt = await repository.GetAsync<List<Message>>("api/Messages");
-        _messages = responseHppt.Response!;
-        return await Task.FromResult(_messages
-            .Where(m => m.ChatId == chatId)
-            .OrderBy(m => m.DateandTime)
-            .ToList());
+        if (currentChat != null)
+        {
+            
+            var responseHppt = await repository.GetAsync<List<Message>>($"api/Messages?chatId={currentChat.ChatId}&after={LastMessageTime?.ToString("o")}");
+            var newMessages = responseHppt.Response!;
+
+            if (newMessages.Any())
+            {
+                messages.AddRange(newMessages); 
+                LastMessageTime = newMessages.Last().DateandTime; 
+            }
+        }
+    }
+
+    public async Task<List<Message>> GetConversationAsync(string chatId, DateTime? afterDate = null)
+    {
+        var url = $"api/Messages?chatId={chatId}";
+
+        if (afterDate.HasValue)
+        {
+            url += $"&afterDate={afterDate.Value:o}"; // Usa formato ISO para la fecha
+        }
+
+        var responseHttp = await repository.GetAsync<List<Message>>(url);
+        return responseHttp.Response ?? new List<Message>();
     }
 }

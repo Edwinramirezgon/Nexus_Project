@@ -33,5 +33,7 @@ namespace NexusProject.Shared.Entities
         [JsonIgnore]
         public Follow Follows { get; set; }
         public int FollowsId { get; set; }
+
+
     }
 }

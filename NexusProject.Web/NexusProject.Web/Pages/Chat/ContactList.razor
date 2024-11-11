@@ -1,49 +1,126 @@
-﻿@inject IRepository repository
+﻿@using System.Threading
+@inject IRepository repository
+@inject AuthenticationStateProvider authenticationStateProvider
+@attribute [Authorize(Roles = "Tutor, Young, Admin")]
 
 <div class="contact-list">
     <div class="contact-list-header">
         <h3>Contacts</h3>
     </div>
-    @foreach (var contact in Contacts)
+    @if (Contacts?.Any() == true)
     {
-        <div class="contact-item @(SelectedContact?.Id == contact.Id ? "selected" : "")"
-             @onclick="() => OnContactSelected(contact)">
-            <div class="contact-avatar">
-                @if (string.IsNullOrEmpty(contact.Photo))
-                {
-                    <div class="default-avatar">@contact.FullName[0]</div>
-                }
-                else
-                {
-                    <img src="@contact.Photo" alt="@contact.FullName" />
-                }
+        @foreach (var contact in Contacts)
+        {
+            var sortedIds = new[] { CurrentUserId, contact.Document }.OrderBy(id => id).ToList();
+            var chat = _chats.FirstOrDefault(c =>
+            (c.User1Id == sortedIds[0] && c.User2Id == sortedIds[1]));
+
+            <div class="contact-item @(SelectedContact?.Id == contact.Id ? "selected" : "")"
+                 @onclick="() => OnContactSelected(contact)">
+                <div class="contact-avatar">
+                    @if (string.IsNullOrEmpty(contact.Photo))
+                    {
+                        <div class="default-avatar">@contact.FullName[0]</div>
+                    }
+                    else
+                    {
+                        <img src="@contact.Photo" alt="@contact.FullName" />
+                    }
+                </div>
+                <div class="contact-info">
+                    <p class="last-message-time" style="font-weight: bold; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center;">
+                        @contact.FullName
+                    </p>
+
+                    @if (chat != null && chat.LastMessageTime != DateTime.MinValue)
+                    {
+                        <p class="last-message" style="font-weight: bold; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center;  background-color: #7c4dff; padding: 5px; border-radius: 5px;">
+                            @chat.LastMessage
+                        </p>
+                        <p class="last-message-time" style="font-weight: bold; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: rgba(0, 128, 0, 0.2); padding: 5px; border-radius: 5px;">
+                            @chat.LastMessageTime.ToString("g")
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="last-message">No messages yet</p>
+                    }
+                </div>
             </div>
-            <div class="contact-info">
-                <p class="contact-name">@contact.FullName</p>
-           
-            </div>
-        </div>
+        }
+    }
+    else
+    {
+        <p>No contacts available.</p>
     }
 </div>
 
 @code {
-    private List<User> Contacts = new List<User>();
-    private User SelectedContact;
+    private List<User> Contacts = new();
+    private User? SelectedContact;
+    private Timer? _timer;
+    private const int RefreshInterval = 500; 
 
-    [Parameter]
-    public EventCallback<User> ContactSelected { get; set; }
+    [Parameter] public EventCallback<User> ContactSelected { get; set; }
+    private List<Chat> _chats = new List<Chat>();
+    private string? CurrentUserId;
+
+    [CascadingParameter] private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
-    {                               
+    {
+        await ParametersSetAsync();
+        await LoadContactsAsync();
 
-        var responseHppt = await repository.GetAsync<List<User>>("api/Users");
-        Contacts = responseHppt.Response!;  
-     
+        // Iniciar el temporizador para actualizar cada 10 segundos
+        _timer = new Timer(async _ => await RefreshContacts(), null, 0, RefreshInterval);
+    }
+
+    private async Task ParametersSetAsync()
+    {
+        var authenticationState = await authenticationStateTask;
+        var userIdClaim = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Document");
+
+        if (userIdClaim is not null)
+        {
+            CurrentUserId = userIdClaim.Value;
+        }
+    }
+
+    private async Task LoadContactsAsync()
+    {
+        var responseHppt = await repository.GetAsync<List<Chat>>("api/Chats");
+        _chats = responseHppt.Response!;
+
+        var response = await repository.GetAsync<List<User>>("api/Users");
+        var users = response?.Response ?? new List<User>();
+
+        Contacts = users
+            .OrderByDescending(contact =>
+            {
+                var sortedIds = new[] { CurrentUserId, contact.Document }.OrderBy(id => id).ToList();
+                var chat = _chats.FirstOrDefault(c =>
+                    c.User1Id == sortedIds[0] && c.User2Id == sortedIds[1]);
+                return chat?.LastMessageTime ?? DateTime.MinValue;
+            })
+            .ToList();
+    }
+
+    private async Task RefreshContacts()
+    {
+        await LoadContactsAsync();
+        StateHasChanged(); // Forzar la actualización de la interfaz
     }
 
     private async Task OnContactSelected(User contact)
     {
         SelectedContact = contact;
         await ContactSelected.InvokeAsync(contact);
+    }
+
+    public void Dispose()
+    {
+        // Detener el temporizador cuando el componente se desmonte
+        _timer?.Dispose();
     }
 }

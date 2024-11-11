@@ -27,5 +27,11 @@ namespace NexusProject.Shared.Entities
         [JsonIgnore]
         public Message Messages { get; set; }
         public string MessageId { get; set; }
+
+
+        [ForeignKey("ChatId")]
+        [JsonIgnore]
+        public Chat Chats { get; set; }
+        public string ChatId { get; set; }
     }
 }
