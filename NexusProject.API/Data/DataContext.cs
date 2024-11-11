@@ -13,6 +13,7 @@ namespace NexusProject.API.Data
 
 
         public DbSet<Tutor> Tutors { get; set; }
+        public DbSet<Chat> Chats { get; set; }
         public DbSet<Young> Youngs { get; set; }
         public DbSet<Admin> Admins { get; set; }
         public DbSet<Activity> Activitys { get; set; }

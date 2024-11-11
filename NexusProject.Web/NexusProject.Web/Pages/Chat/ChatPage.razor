@@ -1,0 +1,99 @@
+﻿@page "/chat"
+@inject IRepository repository
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@inject AuthenticationStateProvider authenticationStateProvider
+@attribute [Authorize(Roles = "Tutor, Young, Admin")]
+
+<div class="chat-app">
+    <ContactList ContactSelected="OnContactSelected" />
+    @if (SelectedContact != null)
+    {
+        <ChatWindow Contact="SelectedContact"
+                    Messages="messages"
+                    CurrentChat="currentChat" />
+    }
+    else
+    {
+        <div class="no-chat-selected">
+            <p>Select a contact to start chatting</p>
+        </div>
+    }
+</div>
+
+@code {
+    private User SelectedContact;
+    private List<Message> messages = new List<Message>();
+    private Chat currentChat;
+    private string CurrentUserId;
+    private  List<Chat> _chats = new List<Chat>();
+    private  List<Message> _messages = new List<Message>();
+
+
+    protected async override Task OnInitializedAsync()
+    {     
+        await ParametersSetAsync();
+       
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
+
+    private async Task ParametersSetAsync()
+    {
+        var authenticationState = await authenticationStateTask;
+
+        var UserId = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Document");
+
+        if (UserId is not null)
+
+        {
+            CurrentUserId = UserId.Value;
+            
+        }
+
+    }
+
+    private async Task OnContactSelected(User contact)
+    {
+        SelectedContact = contact;
+        currentChat = await GetOrCreateChatAsync(CurrentUserId, contact.Document);
+        messages = await GetConversationAsync(currentChat.ChatId);
+        StateHasChanged();
+    }
+
+    public async Task<Chat> GetOrCreateChatAsync(string user1Id, string user2Id)
+    {
+        var responseHppt = await repository.GetAsync<List<Chat>>("api/Chats");
+        _chats = responseHppt.Response!;
+        var sortedIds = new[] { user1Id, user2Id }.OrderBy(id => id).ToList();
+
+     
+        var existingChat = _chats.FirstOrDefault(c =>
+            (c.User1Id == sortedIds[0] && c.User2Id == sortedIds[1]));
+
+        if (existingChat != null)
+            return existingChat;
+
+
+        var newChat = new Chat
+            {
+                ChatId = Guid.NewGuid().ToString(),
+                User1Id = sortedIds[0],
+                User2Id = sortedIds[1],
+                LastMessageTime = DateTime.UtcNow
+            };
+        var responseHttp = await repository.PostAsync<Chat>("/api/Chats", newChat);        
+        return newChat;
+    }
+
+    public async Task<List<Message>> GetConversationAsync(string chatId)
+    {
+        var responseHppt = await repository.GetAsync<List<Message>>("api/Messages");
+        _messages = responseHppt.Response!;
+        return await Task.FromResult(_messages
+            .Where(m => m.ChatId == chatId)
+            .OrderBy(m => m.DateandTime)
+            .ToList());
+    }
+}

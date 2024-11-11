@@ -14,8 +14,8 @@ namespace NexusProject.API.Controllers
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Route("/api/Messages")]
-    public class MessageController : ControllerBase
+    [Route("/api/Chats")]
+    public class ChatCOntroller : ControllerBase
     {
 
         private readonly DataContext _context;
@@ -23,7 +23,7 @@ namespace NexusProject.API.Controllers
         private readonly string _container;
 
         //Constructor
-        public MessageController(DataContext context, IFileStorage fileStorage)
+        public ChatCOntroller(DataContext context, IFileStorage fileStorage)
         {
             _context = context;
             _fileStorage = fileStorage;
@@ -34,14 +34,14 @@ namespace NexusProject.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAsync([FromQuery] PaginationDTO pagination)
         {
-            var queryable = _context.Messages
+            var queryable = _context.Chats
              .AsQueryable();
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
-                queryable = queryable.Where(x => x.MessageId.ToLower().Contains(pagination.Filter.ToLower()));
+                queryable = queryable.Where(x => x.ChatId.ToLower().Contains(pagination.Filter.ToLower()));
             }
             return Ok(await queryable
-            .OrderBy(x => x.MessageId)
+            .OrderBy(x => x.ChatId)
             .Paginate(pagination)
             .ToListAsync());
         }
@@ -50,10 +50,10 @@ namespace NexusProject.API.Controllers
         public async Task<ActionResult> GetPages([FromQuery] PaginationDTO pagination)
 
         {
-            var queryable = _context.Messages.AsQueryable();
+            var queryable = _context.Chats.AsQueryable();
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
-                queryable = queryable.Where(x => x.MessageId.ToLower().Contains(pagination.Filter.ToLower()));
+                queryable = queryable.Where(x => x.ChatId.ToLower().Contains(pagination.Filter.ToLower()));
             }
             double count = await queryable.CountAsync();
             double totalPages = Math.Ceiling(count / pagination.RecordsNumber);
@@ -62,53 +62,53 @@ namespace NexusProject.API.Controllers
 
 
         [HttpPost("CreateActivity")]
-        public async Task<ActionResult> CreateActivity([FromBody] Message model)
+        public async Task<ActionResult> CreateActivity([FromBody] Chat model)
         {
 
-            Message message = model;
+            Chat chat = model;
 
-            _context.Add(message);
+            _context.Add(chat);
             await _context.SaveChangesAsync();
 
-            return Ok(message);
+            return Ok(chat);
 
         }
 
 
         //Method Create
         [HttpPost]
-        public async Task<ActionResult<Message>> PostAsync(Message message)
+        public async Task<ActionResult<Chat>> PostAsync(Chat chat)
         {
-            _context.Add(message);
+            _context.Add(chat);
             await _context.SaveChangesAsync();
 
 
-            return Ok(message);
+            return Ok(chat);
         }
 
         //Method Get by ID (Read)
         [HttpGet("{Code:int}")]
         public async Task<ActionResult> GetAsync(string Code)
         {
-            var message = await _context.Messages.FirstOrDefaultAsync
-                (x => x.MessageId == Code);
+            var chat = await _context.Chats.FirstOrDefaultAsync
+                (x => x.ChatId == Code);
 
-            if (message == null)
+            if (chat == null)
             {
                 return NotFound();
             }
-            return Ok(message);
+            return Ok(chat);
         }
 
 
         //Method Update
         [HttpPut]
-        public async Task<ActionResult> PutAsync(Message message)
+        public async Task<ActionResult> PutAsync(Chat chat)
         {
-            _context.Update(message);
+            _context.Update(chat);
 
             await _context.SaveChangesAsync();
-            return Ok(message);
+            return Ok(chat);
 
         }
 
@@ -116,14 +116,14 @@ namespace NexusProject.API.Controllers
         [HttpDelete("{Code:int}")]
         public async Task<ActionResult> DeleteAsync(string Code)
         {
-            var message = await _context.Messages.FirstOrDefaultAsync
-                  (x => x.MessageId == Code);
+            var chat = await _context.Chats.FirstOrDefaultAsync
+                  (x => x.ChatId == Code);
 
-            if (message == null)
+            if (chat == null)
             {
                 return NotFound();
             }
-            _context.Remove(message);
+            _context.Remove(chat);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -134,7 +134,7 @@ namespace NexusProject.API.Controllers
         [HttpGet("combo")]
         public async Task<ActionResult> GetCombo()
         {
-            return Ok(await _context.Messages.ToListAsync());
+            return Ok(await _context.Chats.ToListAsync());
         }
     }
 

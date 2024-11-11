@@ -1,27 +1,73 @@
-﻿@inject IChatService ChatService
+﻿@inject IRepository repository
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@inject AuthenticationStateProvider authenticationStateProvider
+@attribute [Authorize(Roles = "Tutor, Young, Admin")]
 
-@*<div class="chat-window">
+<div class="chat-window">
+    <div class="chat-header">
+        <h3>@Contact.FullName</h3>
+    </div>
     <div class="messages">
         @foreach (var message in Messages)
         {
             <div class="message @(message.SenderId == CurrentUserId ? "user-message" : "contact-message")">
-                <p>@message.content</p>
+                <p>@message.Content</p>
                 <span class="timestamp">@message.DateandTime.ToString("g")</span>
             </div>
         }
     </div>
-
     <div class="message-input">
-        <input type="text" @bind="NewMessageContent" placeholder="Escribe tu mensaje..." />
-        <button @onclick="SendMessage">Enviar</button>
+        <input type="text"
+               @bind="NewMessageContent"
+               @bind:event="oninput"
+               @onkeypress="HandleKeyPress"
+               placeholder="Type your message..." />
+        <button @onclick="SendMessage">Send</button>
     </div>
 </div>
 
 @code {
     [Parameter] public User Contact { get; set; }
     [Parameter] public List<Message> Messages { get; set; } = new List<Message>();
+    [Parameter] public Chat CurrentChat { get; set; }
+    private List<Chat> _chats = new List<Chat>();
+    private List<Message> _messages = new List<Message>();
+
     private string NewMessageContent { get; set; }
-    private string CurrentUserId = ""; // Aquí deberías colocar el ID del usuario actual.
+    private string CurrentUserId;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await ParametersSetAsync();
+
+    }
+
+    private async Task ParametersSetAsync()
+    {
+        var authenticationState = await authenticationStateTask;
+
+        var UserId = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Document");
+
+        if (UserId is not null)
+
+        {
+            CurrentUserId = UserId.Value;
+
+        }
+
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
+    }
 
     private async Task SendMessage()
     {
@@ -29,15 +75,35 @@
         {
             var message = new Message
                 {
-                    content = NewMessageContent,
+                    ChatId = CurrentChat.ChatId,
                     SenderId = CurrentUserId,
-                    ReceiverId = Contact.Id,
+                    ReceiverId = Contact.Document,
+                    Content = NewMessageContent,
                     DateandTime = DateTime.UtcNow
                 };
 
-            await ChatService.SendMessageAsync(message);
+            await SendMessageAsync(message);
             Messages.Add(message);
-            NewMessageContent = string.Empty;
+            var responseHttp = await repository.PostAsync<Message>("/api/Messages", message);
+            StateHasChanged();
         }
     }
-}*@
+
+    public async Task SendMessageAsync(Message message)
+    {
+        var responseHppt = await repository.GetAsync<List<Chat>>("api/Chats");
+        _chats = responseHppt.Response!;
+        var chat = _chats.FirstOrDefault(c => c.ChatId == message.ChatId);
+        if (chat != null)
+        {
+            var responseHttp = await repository.PostAsync<Message>("/api/Messages", message);         
+
+        
+            chat.MessageHistory.Add(message.Content);
+            chat.LastMessage = message.Content;
+            chat.LastMessageTime = message.DateandTime;
+
+            await Task.CompletedTask;
+        }
+    }
+}

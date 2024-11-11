@@ -385,6 +385,7 @@ namespace NexusProject.API.Controllers
             {
                 new Claim(ClaimTypes.Name, user.Email!),
                 new Claim(ClaimTypes.Role, user.UserType.ToString()),
+                new Claim("ID", user.Id),
                 new Claim("Document", user.Document),
                 new Claim("FirstName", user.FirstName),
                 new Claim("LastName", user.LastName),

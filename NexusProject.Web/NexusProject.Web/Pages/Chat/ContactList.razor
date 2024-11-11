@@ -1,26 +1,49 @@
-﻿@inject IChatService ChatService
+﻿@inject IRepository repository
 
 <div class="contact-list">
+    <div class="contact-list-header">
+        <h3>Contacts</h3>
+    </div>
     @foreach (var contact in Contacts)
     {
-        <div class="contact-item" @onclick="() => OnContactSelected(contact)">
-            <p class="contact-name">@contact.FullName</p>
+        <div class="contact-item @(SelectedContact?.Id == contact.Id ? "selected" : "")"
+             @onclick="() => OnContactSelected(contact)">
+            <div class="contact-avatar">
+                @if (string.IsNullOrEmpty(contact.Photo))
+                {
+                    <div class="default-avatar">@contact.FullName[0]</div>
+                }
+                else
+                {
+                    <img src="@contact.Photo" alt="@contact.FullName" />
+                }
+            </div>
+            <div class="contact-info">
+                <p class="contact-name">@contact.FullName</p>
+           
+            </div>
         </div>
     }
 </div>
 
 @code {
     private List<User> Contacts = new List<User>();
+    private User SelectedContact;
+
+    [Parameter]
+    public EventCallback<User> ContactSelected { get; set; }
 
     protected override async Task OnInitializedAsync()
-    {
-        Contacts = await ChatService.GetContactsAsync();
+    {                               
+
+        var responseHppt = await repository.GetAsync<List<User>>("api/Users");
+        Contacts = responseHppt.Response!;  
+     
     }
 
-    [Parameter] public EventCallback<User> ContactSelected { get; set; }
-
-    private void OnContactSelected(User contact)
+    private async Task OnContactSelected(User contact)
     {
-        ContactSelected.InvokeAsync(contact);
+        SelectedContact = contact;
+        await ContactSelected.InvokeAsync(contact);
     }
 }

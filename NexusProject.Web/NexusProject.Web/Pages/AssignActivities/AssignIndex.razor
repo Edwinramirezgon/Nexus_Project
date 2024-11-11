@@ -258,14 +258,12 @@
     private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
 
     private async  Task ParametersSetAsync()
-
     {
-
         var authenticationState = await authenticationStateTask;
 
 
 
-        var UserId = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Document"); ;
+        var UserId = authenticationState.User.Claims.FirstOrDefault(x => x.Type == "Document"); 
 
 
 

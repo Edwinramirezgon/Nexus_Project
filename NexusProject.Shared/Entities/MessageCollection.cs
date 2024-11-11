@@ -26,6 +26,6 @@ namespace NexusProject.Shared.Entities
         [ForeignKey("MessageId")]
         [JsonIgnore]
         public Message Messages { get; set; }
-        public int MessageId { get; set; }
+        public string MessageId { get; set; }
     }
 }
