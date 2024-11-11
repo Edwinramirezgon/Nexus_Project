@@ -23,7 +23,7 @@ else
                         <Pagination CurrentPage="currentPage"
                                     TotalPages="totalPages"
                                     SelectedPage="SelectedPage" />
-                        <a class="btn btn-sm btn-dark float-end" @onclick=@(() => ShowModal2())><i class="bi bi-plus"></i> Add Admin</a>
+                       
                     </span>
                 </div>
                 <div class="mx-2">
@@ -54,7 +54,7 @@ else
                         <th>Email</th>                        
                         <th>Confirm</th>                       
                         <th>User Type</th>
-                        <th>Actions</th>
+             
                     </tr>
                 </thead>
                 <tbody>
@@ -62,19 +62,14 @@ else
                             {
                                 
                         <tr>
-                            
+                            <td><img src="@user.Photo" width="80" height="80" style="border-radius:50%" /></td>
                             <td>@user.FullName</td>
                             <td>@user.Document</td>                           
                             <td>@user.Email</td>                           
                             <td>@user.EmailConfirmed</td>
                             <td>@user.UserType</td>
 
-                            <td>
-
-                                <a @onclick=@(() => ShowModal(user.Id, true)) class="btn btn-outline-primary ">Edit <i class="bi bi-pencil-square"></i></a>
-                                <a @onclick=@(() => ShowModal3(user.Id, true)) class="btn btn-outline-secondary ">Trades <i class="bi bi-pencil-square"></i></a>
-                                <button class="btn btn-outline-danger" @onclick=@(() => Delete(user))>Delete <i class="bi bi-trash3"></i></button>
-                            </td>
+                            
                         </tr>
                             }
                 </tbody>
@@ -97,49 +92,7 @@ else
     [CascadingParameter]
     IModalService Modal { get; set; } = default!;
 
-    private async Task ShowModal(string id = "", bool isEdit = false)
-
-    {
-        IModalReference modalReference;
-        modalReference = Modal.Show<UserEdit>("User Edit", new ModalParameters().Add("UserId", id));
-
-        var result = await modalReference.Result;
-        if (result.Confirmed)
-        {
-            await LoadAsync();
-        }
-    }
-
-    private async Task ShowModal2()
-
-    {
-        IModalReference modalReference;
-
-
-        modalReference = Modal.Show<Auth.Register>("Register",new ModalParameters().Add("IsAdmin", true));
-
-        var result = await modalReference.Result;
-        if (result.Confirmed)
-        {
-            await LoadAsync();
-        }
-    }
-
-
-    private async Task ShowModal3(string id = "", bool isEdit = false)
-
-    {
-        IModalReference modalReference;
-        modalReference = Modal.Show<TradesUser>("Trades", new ModalParameters().Add("UserId", id));
-
-        var result = await modalReference.Result;
-        if (result.Confirmed)
-        {
-            await LoadAsync();
-        }
-    }
-
-
+   
 
     public List<User> Users { get; set; }
 
@@ -195,59 +148,6 @@ else
 
     }
 
-
-
-    private async Task Delete(User user)
-    {
-
-        var result = await sweetAlertService.FireAsync(new SweetAlertOptions
-            {
-                Title = "Confirm",
-                Text = $"You really want to delete the User : {user.FullName}?",
-                Icon = SweetAlertIcon.Question,
-                ShowCancelButton = true,
-                CancelButtonText = "No",
-                ConfirmButtonText = "yes"
-            });
-
-        var confirm = string.IsNullOrEmpty(result.Value);
-        if (confirm)
-        {
-            return;
-        }
-
-        var responseHTTP = await repository.DeleteAsync($"/api/users/{user.Id}");
-
-        if (responseHTTP.Error)
-        {
-            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                navigationManager.NavigateTo("/users");
-            }
-            else
-            {
-                var mensajeError = await responseHTTP.GetErrorMessageAsync();
-                await sweetAlertService.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
-            }
-        }
-        else
-        {
-
-            await LoadAsync();
-
-            var toast = sweetAlertService.Mixin(new SweetAlertOptions
-                {
-                    Toast = true,
-                    ShowConfirmButton = true,
-                    Timer = 3000,
-                    Position = SweetAlertPosition.BottomEnd
-                });
-            toast.FireAsync(icon: SweetAlertIcon.Success, message: "User Successfully Deleted.");
-        }
-    }
-
-   
-    
 
     private async Task CleanFilterAsync()
     {

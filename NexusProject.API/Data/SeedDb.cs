@@ -31,7 +31,6 @@ namespace NexusProject.API.Data
             await CheckUserAsync("98764595", "Young", "Number1", "Young1@Nexus.com", UserType.Young, "https://nexusprojectitm.s3.us-east-2.amazonaws.com/08956e0c-da87-404d-9877-2144615a3ffc.jpg");
             await CheckUserAsync("98764594", "Young", "Number2", "Young2@Nexus.com", UserType.Young, "https://nexusprojectitm.s3.us-east-2.amazonaws.com/08956e0c-da87-404d-9877-2144615a3ffc.jpg");
             await CheckUserAsync("98764593", "Tutor", "Number2", "Tutor2@Nexus.com", UserType.Tutor, "https://nexusprojectitm.s3.us-east-2.amazonaws.com/08956e0c-da87-404d-9877-2144615a3ffc.jpg");
-
             await CheckYoungAsync();
             await CheckTutorAsync();
             await CheckAdminAsync();

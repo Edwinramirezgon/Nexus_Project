@@ -1,0 +1,221 @@
+﻿@page "/AdminActivity"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+@inject AuthenticationStateProvider authenticationStateProvider
+@attribute [Authorize(Roles = "Admin")]
+
+
+<PageTitle>ADMIN ACTIVITY</PageTitle>
+
+
+<h4>ADMIN ACTIVITY</h4>
+
+<div class="containergrade">
+    <GenericList MyList="ActivitiesCollection">
+        <Body>
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>ACTIVITY ID</th>
+                        <th>TUTOR DOCUMENT</th>
+                        <th>TUTOR NAME</th>                        
+                        <th>STUDENT DOCUMENT</th>
+                        <th>STUDENT NAME</th>
+                        <th>ACTIVITY NAME</th>
+                        <th>ACTIVITY DESCRIPTION</th>
+                        <th>ACTIVITY DUE DATE</th>
+                        <th>PERCENTAGE</th>
+                        <th>GRADE</th>
+                        <th>REMARKS</th>
+                        <th>DELIVERED TASK</th>
+                        <th>DELIVERED TIME</th>                   
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var processedActivity in ProcessedActivities)
+                    {
+                        <tr>
+                            <td>@processedActivity.activityId</td>
+                            <td>@processedActivity.TDocument</td>
+                            <td>@processedActivity.TFullName</td>
+                            <td>@processedActivity.SDocument</td>
+                            <td>@processedActivity.SFullName</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(processedActivity.File))
+                                {
+                                    <a href="@processedActivity.File" target="_blank" class="btn btn-link">
+                                        @processedActivity.Title
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>@processedActivity.Title</span>
+                                }
+                            </td>
+                            <td>@processedActivity.Description</td>
+                            <td>@processedActivity.Duedate.ToString("yyyy-MM-dd")</td>
+                            <td>@processedActivity.Percentage %</td>
+                            <td>@processedActivity.Grade</td>
+                            <td>@processedActivity.Remarks</td>                          
+        
+                            <td>
+                                @if (processedActivity.SendTask == null)
+                                {
+                                    <button class="btn btn-secondary custom-file-button" disabled>Not Delivered</button>
+                                }
+                                else if (processedActivity.SendTask != null)
+                                {
+                                    <a href="@processedActivity.SendTask" target="_blank" class="btn btn-primary custom-file-button">
+                                        Delivered
+                                    </a>
+                                }
+                            </td>
+                            <td>
+                                @if (@processedActivity.SendDate.ToString("yyyy-MM-dd--HH--mm").Equals("0001-01-01--00--00"))
+                                {
+                                    <span>Not Delivered</span>
+                                }
+                                else
+                                {
+                                    @processedActivity.SendDate.ToString("yyyy-MM-dd--HH--mm")
+                                }
+                            </td>                         
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </Body>
+    </GenericList>
+
+    <div class="pagination">
+        <Pagination CurrentPage="currentPage"
+                    TotalPages="totalPages"
+                    SelectedPage="SelectedPage" />
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Page { get; set; } = "";
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Filter { get; set; } = "";
+
+    private List<ActivityData> ProcessedActivities { get; set; } = new();
+    private List<ActivityColection> ActivitiesCollection { get; set; }
+    private ActivityColection activitycollection = new();
+    private User SUsers = new();
+    private User TUsers = new();
+    private Activity activity = new();
+    private Tutor tutor = new();
+    private Young young = new();
+    private Follow follow = new(); 
+    private int currentPage = 1;
+    private int totalPages;
+
+
+    private class ActivityData
+    {
+        public int activityId { get; set; }
+        public string TDocument { get; set; }
+        public string TFullName { get; set; }
+        public string SDocument { get; set; }
+        public string SFullName { get; set; }
+        public string File { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public DateTime Duedate { get; set; }
+        public int Percentage { get; set; }
+        public double Grade { get; set; }
+        public string Remarks { get; set; }
+        public string SendTask { get; set; }
+        public DateTime SendDate { get; set; }
+        public int Followid { get; set; }
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        await LoadAsync();
+    }
+     
+
+    private async Task LoadAsync(int page = 1)
+    {
+        if (!string.IsNullOrWhiteSpace(Page))
+        {
+            page = Convert.ToInt32(Page);
+        }
+
+        string url1 = string.Empty;
+        string url2 = string.Empty;
+        if (string.IsNullOrEmpty(Filter))
+        {
+            url1 = $"api/ActivityCollection3?page={page}";
+            url2 = $"api/ActivityCollection3/totalPages";
+        }
+        else
+        {
+            url1 = $"api/ActivityCollection3?page={page}&filter={Filter}";
+            url2 = $"api/ActivityCollection3/totalPages?filter={Filter}";
+        }
+
+        var responseActivities = await repository.GetAsync<List<ActivityColection>>(url1);
+        var responseTotalPages = await repository.GetAsync<int>(url2);
+        var responseUsers = await repository.GetAsync<List<User>>("api/Users");
+
+        ActivitiesCollection = responseActivities.Response!;
+        totalPages = responseTotalPages.Response!;
+        ProcessedActivities.Clear();
+
+        foreach (var activitycollection in ActivitiesCollection)
+        {
+            await Search(activitycollection.TutorsId, activitycollection.Youngid, activitycollection.ActivitiesId, activitycollection.FollowsId);
+            ProcessedActivities.Add(new ActivityData
+                {
+                    activityId = activity.Id,
+                    TDocument = TUsers.Document,
+                    TFullName = TUsers.FullName,
+                    SDocument = SUsers.Document,
+                    SFullName = SUsers.FullName,
+                    File = activity.FileTask,
+                    Title = activity.Title,
+                    Description = activity.Description,
+                    Duedate = activity.DateandTime,
+                    Percentage = activity.Percentage,
+                    Grade = follow.punctuation,
+                    Remarks = follow.Remarks,
+                    SendTask = activity.SendTask,
+                    SendDate = activity.SendTime,
+                    Followid = follow.Id
+                });
+        }
+    }
+
+    private async Task Search(int Tutorsid, int youngid, int activityid, int followid)
+    {
+        var responseHTTP = await repository.GetAsync<Young>($"api/Youngs/id/{youngid}");
+        young = responseHTTP.Response;
+        var responseHTTP2 = await repository.GetAsync<User>($"api/Users/{young.UserDocument}");
+        SUsers = responseHTTP2.Response;
+        var responseHTTP3 = await repository.GetAsync<Tutor>($"api/Tutors/id/{Tutorsid}");
+        tutor = responseHTTP3.Response;
+        var responseHTTP4 = await repository.GetAsync<User>($"api/Users/{tutor.UserDocument}");
+        TUsers = responseHTTP4.Response;
+        var responseHTTP5 = await repository.GetAsync<Activity>($"api/Activitys/{activityid}");
+        activity = responseHTTP5.Response;
+        var responseHTTP6 = await repository.GetAsync<Follow>($"api/Follows/{followid}");
+        follow = responseHTTP6.Response;
+    }
+
+   
+
+    private async Task SelectedPage(int page)
+    {
+        currentPage = page;
+        await LoadAsync(page);
+    }
+}
