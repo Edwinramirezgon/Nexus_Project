@@ -9,6 +9,9 @@
 @using Blazored.Modal.Services
 @using NexusProject.Web.Pages
 
+
+
+
 <div class="page">
     <main>
 
@@ -39,13 +42,13 @@
 
                             
 
-                    <a class="nav-link text-white" href="AdminActivity">&nbsp; Activities  </a>
+                    <NavLink class="nav-link text-white" activeClass="active" href="AdminActivity">&nbsp; Activities  </NavLink>
 
 
-                    <a class="nav-link text-white" href="chat">&nbsp; Messages  </a>
+                    <NavLink  class="nav-link text-white" activeClass="active" href="chat">&nbsp; Messages </NavLink>
 
 
-                    <a class="nav-link text-white" href="users">&nbsp; Users  </a>
+                 <NavLink  class="nav-link text-white" activeClass="active" href="users">&nbsp; Users  </NavLink>
                             
         
                              
@@ -61,13 +64,13 @@
             <AuthorizeView Roles="Tutor">
                 <Authorized>
 
-                    <a class="nav-link text-white" href="EvaluationAndMonitoring">&nbsp; Evaluation and Monitoring  </a>
+                    <NavLink class="nav-link text-white" activeClass="active" href="EvaluationAndMonitoring">&nbsp; Evaluation and Monitoring  </NavLink>
 
 
-                    <a class="nav-link text-white" href="Chat">&nbsp; Messages  </a>
+                    <NavLink class="nav-link text-white" activeClass="active" href="Chat">&nbsp; Messages  </NavLink>
 
 
-                    <a class="nav-link text-white" href="AssignActivities">&nbsp; Assign Activities  </a>
+                  <NavLink class="nav-link text-white" activeClass="active" href="AssignActivities">&nbsp; Assign Activities  </NavLink>
 
 
                 </Authorized>
@@ -78,13 +81,13 @@
                 <Authorized>
 
 
-                    <a class="nav-link text-white" href="CheckActivities">&nbsp; Activities  </a>
+                    <NavLink  class="nav-link text-white" activeClass="active" href="CheckActivities">&nbsp; Activities  </NavLink>
 
 
-                    <a class="nav-link text-white" href="Chat">&nbsp; Messages  </a>
+                  <NavLink  class="nav-link text-white" activeClass="active" href="Chat">&nbsp; Messages  </NavLink>
 
 
-                    <a class="nav-link text-white" href="Grades">&nbsp; Grades  </a>
+                <NavLink  class="nav-link text-white" activeClass="active" href="Grades">&nbsp; Grades </NavLink>
 
 
 

@@ -668,3 +668,7 @@ h4 {
     margin-top: 0.25rem;
     display: block;
 }
+
+.nav-link.active {
+    color: #FF69B4 !important; 
+}
