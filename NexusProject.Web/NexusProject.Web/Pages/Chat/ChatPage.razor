@@ -109,24 +109,8 @@
                 User2Id = sortedIds[1],             
             };
 
-        var responseHttp = await repository.PostAsync<Chat>("/api/Chats", newChat);
+        var responseHttp = await repository.PostAsync<Chat, Chat>("/api/Chats", newChat);
         return newChat;
-    }
-
-    private async Task FetchNewMessagesAsync()
-    {
-        if (currentChat != null)
-        {
-            
-            var responseHppt = await repository.GetAsync<List<Message>>($"api/Messages?chatId={currentChat.ChatId}&after={LastMessageTime?.ToString("o")}");
-            var newMessages = responseHppt.Response!;
-
-            if (newMessages.Any())
-            {
-                messages.AddRange(newMessages); 
-                LastMessageTime = newMessages.Last().DateandTime; 
-            }
-        }
     }
 
     public async Task<List<Message>> GetConversationAsync(string chatId, DateTime? afterDate = null)
