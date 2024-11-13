@@ -56,7 +56,7 @@
                     InvokeAsync(StateHasChanged);
                 }
             }
-        }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(500));
+        }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1200));
     }
 
     [CascadingParameter]
@@ -119,7 +119,7 @@
 
         if (afterDate.HasValue)
         {
-            url += $"&afterDate={afterDate.Value:o}"; // Usa formato ISO para la fecha
+            url += $"&afterDate={afterDate.Value:o}"; 
         }
 
         var responseHttp = await repository.GetAsync<List<Message>>(url);

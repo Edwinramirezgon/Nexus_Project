@@ -72,7 +72,7 @@
         await ParametersSetAsync();
         await LoadContactsAsync();
 
-        // Iniciar el temporizador para actualizar cada 10 segundos
+      
         _timer = new Timer(async _ => await RefreshContacts(), null, 0, RefreshInterval);
     }
 
@@ -109,7 +109,7 @@
     private async Task RefreshContacts()
     {
         await LoadContactsAsync();
-        StateHasChanged(); // Forzar la actualización de la interfaz
+        StateHasChanged(); 
     }
 
     private async Task OnContactSelected(User contact)
@@ -120,7 +120,7 @@
 
     public void Dispose()
     {
-        // Detener el temporizador cuando el componente se desmonte
+      
         _timer?.Dispose();
     }
 }
