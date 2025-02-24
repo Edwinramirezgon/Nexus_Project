@@ -54,7 +54,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 
-builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer("name = WindowsSecurity"));
+builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer("name = WindowsSecurity2"));
 
 
 builder.Services.AddIdentity<User, IdentityRole>(x =>
